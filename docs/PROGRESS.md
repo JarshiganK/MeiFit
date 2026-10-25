@@ -1,0 +1,74 @@
+# Progress
+
+Build order follows `MASTER_PLAN.md` §13: Phase 0, then Phase 1 items 1–11. Phases 2 and 3 start only when the owner asks.
+
+## Phase 0: foundations (done, 2026-10-25)
+
+| Item                                                                                              | Status       | Main files                                                     |
+| ------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------- |
+| Vite + React + TypeScript (strict) project, npm scripts, `.nvmrc`, `engines`                      | done         | `package.json`, `tsconfig*.json`, `vite.config.ts`             |
+| Lint (ESLint, Prettier), date and design-token lint rules                                         | done         | `eslint.config.js`, `tests/lint-rules.test.ts`                 |
+| Unit tests in two time zones with coverage gates; time-zone sanity test                           | done         | `vitest.config.ts`, `tests/timezone.test.ts`                   |
+| Playwright (WebKit iPhone 15 Pro Max, Chromium Pixel 7, Asia/Colombo) and axe                     | done         | `playwright.config.ts`, `e2e/`                                 |
+| Design tokens (Lamplight HUD), both themes, contrast and hue tests                                | done         | `src/ui/theme.css`, `tests/tokens.test.ts`                     |
+| UI primitives and the dev-only `/dev/ui` gallery                                                  | done         | `src/ui/`, `src/dev/UiGallery.tsx`                             |
+| App shell: five tabs, Settings gear, designed empty states, offline banner, error and 404 screens | done         | `src/app/`, `src/features/*/`                                  |
+| PWA: manifest, icons, maskable icon, apple-touch-icon, offline precache                           | done         | `vite.config.ts`, `public/icon.svg`, `pwa-assets.config.ts`    |
+| Version number and "Update available — Reload" prompt                                             | done         | `src/app/UpdatePrompt.tsx`, `src/app/version.ts`               |
+| Eruda debug toggle (lazy)                                                                         | done         | `src/app/debug.ts`, `src/features/settings/SettingsScreen.tsx` |
+| Netlify: `_redirects`, `netlify.toml` headers mirrored in `vite preview`                          | done         | `netlify.toml`, `config/headers.ts`, `tests/headers.test.ts`   |
+| Initial-JS budget check                                                                           | done         | `scripts/check-bundle.mjs`                                     |
+| GitHub repo and Netlify site (owner's accounts)                                                   | todo (owner) | see README "Deploy"                                            |
+| Gate: app opens offline from the iPhone Home Screen                                               | todo (owner) | checkpoint steps                                               |
+
+## Features (plan §6)
+
+| Module        | Feature                                                               | Phase  | Status                                                                                                                   | Main files                           |
+| ------------- | --------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Setup         | First-launch setup, target calculation, Profile in Settings           | 1      | todo (item 3)                                                                                                            |                                      |
+| Game core     | Daily quest board, XP and levels                                      | 1      | todo (item 11)                                                                                                           |                                      |
+| Game core     | STR / VIT / INT stats, E–S ranks                                      | 2 Must | todo (stat colours and badges ready)                                                                                     | `src/ui/StatBadge.tsx`               |
+| Game core     | Streaks with streak shields, exam mode, weekly boss                   | 2 Must | todo                                                                                                                     |                                      |
+| Game core     | Achievements                                                          | 2 Nice | todo                                                                                                                     |                                      |
+| Diet          | Starter menu and menu editor                                          | 1      | todo (item 4)                                                                                                            |                                      |
+| Diet          | Tap logging: rice in cups, other items small / normal / large         | 1      | todo (item 4)                                                                                                            |                                      |
+| Diet          | Combos, generic plates, drinks +1, outside food quick-add             | 1      | todo (item 5)                                                                                                            |                                      |
+| Diet          | Daily totals, protein bar, flex-dinner budget, protein calibration    | 1      | todo (items 4–5)                                                                                                         |                                      |
+| Diet          | Photo meal recognition (Shortcuts or Gemini)                          | 3      | todo                                                                                                                     |                                      |
+| Workout       | Plan builder                                                          | 1      | todo (item 9)                                                                                                            |                                      |
+| Workout       | Session logging, pre-fill from last session                           | 1      | todo (item 10)                                                                                                           |                                      |
+| Workout       | Rest timer, PR detection, exam-mode workout plan                      | 2 Must | todo                                                                                                                     |                                      |
+| Workout       | Progression suggestions, missed-session reschedule                    | 2 Nice | todo                                                                                                                     |                                      |
+| Fitness check | 4-weekly check, baseline, history and comparison, target review       | 2 Must | todo                                                                                                                     |                                      |
+| Sleep         | Two-tap sleep and wake log                                            | 1      | todo (item 6)                                                                                                            |                                      |
+| Sleep         | Import from Apple Health through a Shortcut                           | 3      | todo                                                                                                                     |                                      |
+| Body          | Weight log with weekly average chart                                  | 1      | todo (item 7)                                                                                                            |                                      |
+| Body          | Waist log every 2 weeks, calorie adjustment suggestions               | 2 Must | todo                                                                                                                     |                                      |
+| Study         | Focus timer                                                           | 1      | todo (item 8)                                                                                                            |                                      |
+| Study         | Exam and deadline calendar, auto exam mode                            | 2 Must | todo                                                                                                                     |                                      |
+| Study         | Hours per subject                                                     | 2 Nice | todo                                                                                                                     |                                      |
+| Wellbeing     | One-tap energy and mood check-in                                      | 2 Nice | todo                                                                                                                     |                                      |
+| Reports       | Weekly report                                                         | 2 Must | todo                                                                                                                     |                                      |
+| System        | Offline installable PWA, persistent storage, backup export and import | 1      | in progress: PWA and offline done (Phase 0); storage and backup are item 2                                               | `vite.config.ts`                     |
+| System        | Settings, debug console toggle, version number and update prompt      | 1      | in progress: debug, version, update prompt, theme and health note done; Profile, menu editor, backup and Privacy to come | `src/features/settings/`, `src/app/` |
+| System        | Reminders through Shortcuts automations                               | 2 Must | todo                                                                                                                     |                                      |
+| System        | Steps import through a Shortcut                                       | 3      | todo                                                                                                                     |                                      |
+
+## Phase 1 build order
+
+1. Database setup (Dexie v1) and local-date helpers: **next**
+2. Backup export and import, persistent storage, Privacy page, delete all data
+3. First-launch setup and target calculation
+4. Starter menu, food tap logging and daily totals
+5. Combos, generic plates, drinks, outside food, flex budget, protein calibration
+6. Two-tap sleep log
+7. Weight log and weekly average chart
+8. Study focus timer
+9. Workout plan builder
+10. Workout session logging with pre-fill
+11. Quest board, XP and levels
+
+## Open TODOs
+
+- **LICENSE:** the owner will choose the licence. No LICENSE file until then.
+- `PRIVACY.md` is a draft. The in-app Settings → Privacy page that mirrors it lands with item 2.
