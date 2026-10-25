@@ -1,6 +1,6 @@
 # Progress
 
-Build order follows `MASTER_PLAN.md` §13: Phase 0, then Phase 1 items 1–11. Phases 2 and 3 start only when the owner asks.
+Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 2 (Must, then Nice), then Phase 3. Builds run unattended on `develop` (CLAUDE.md §2). Checkpoint reports are in `docs/checkpoints/`.
 
 ## Phase 0: foundations (done, 2026-10-25)
 
@@ -58,7 +58,7 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, then Phase 1 items 1–11. P
 
 1. Database setup (Dexie v1) and local-date helpers: **done** (`src/domain/date.ts`, `src/db/`)
 2. Backup export and import, persistent storage, Privacy page, delete all data: **done** (`src/db/backup.ts`, `src/features/settings/`); every screen is now lazy-loaded
-3. First-launch setup and target calculation: **done** (`src/domain/targets.ts`, `src/features/setup/`)
+3. First-launch setup and target calculation: **done** (`src/domain/targets.ts`, `src/features/setup/`); setup resumes after a relaunch
 4. Starter menu, food tap logging and daily totals: **next**
 5. Combos, generic plates, drinks, outside food, flex budget, protein calibration
 6. Two-tap sleep log

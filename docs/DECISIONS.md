@@ -137,7 +137,7 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Baseline fitness check:** defaults to the next Saturday (1–7 days ahead) and can be booked from today to 7 days ahead. It's stored as the `baselineCheckDue` setting; the check itself is Phase 2.
 - **No profile means setup.** The profile gate is lazy-loaded with the database, so Dexie stays out of the initial bundle. Delete all data now lands on setup, as approved.
 - **Changing answers** (Settings → Profile → Change answers) reruns the about, goal and routine steps plus the review, prefilled. It keeps the first setup date (the protein calibration counts from it) and any calibrated protein threshold. It adds a target row starting today, or replaces today's row, so earlier days keep their targets. It records a weigh-in only if the weight was changed, and it keeps the booked baseline date.
-- **Answers are kept in memory during setup.** A 2-minute flow restarting after iOS closes the app is acceptable; storing a half-finished profile would add cleanup paths.
+- **Answers are kept in memory during setup.** Superseded by the item 3 fix below.
 - **Validation:** pressing Next with errors moves focus to the first problem field.
 - **`ImportBackup` was extracted from `DataCard`,** so setup and Settings share one import flow.
 - **New UI primitive `ChoiceCards`** (large radio cards with a hint) and **`formatNumber`** (fixed English number format, e.g. "2,020").
@@ -147,3 +147,14 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
   - The "Replace on an empty phone" test moved from Settings to setup's install step, because a phone with no data can't reach Settings.
   - One expected value in my new BMR tests was my own arithmetic slip (1,626.25 × 1.2 = 1,951.5, which rounds to 1,952), corrected before the code changed.
 - **Initial JS is 113.0 KB gzipped** (was 106.7 KB). The setup copy lives in the shared `en.ts`, and the shell imports primitives through `src/ui/index.ts`. Still about 87 KB under budget. If headroom gets tight, splitting `en.ts` per feature is the first lever.
+
+## 2026-10-25: Item 3 fix (setup resumes after a relaunch)
+
+- **Owner request:** setup answers are saved as a draft after each step and resume after a relaunch. The draft stays out of backups and is cleared when setup finishes.
+- **Where:** one `setupDraft` row in the `settings` table (step, answers, menu choice, exams, baseline date and any target edits). No schema change, since `settings` is a key–value table. Alternative: `localStorage` (rejected: the rest of the app's state lives in IndexedDB, and Delete all data already clears it).
+- **When:** written every time the step changes (Next, Back or Skip intro), so a relaunch opens the step the user was on. Typing within a step isn't saved until they move on, which keeps writes to one per step.
+- **Out of backups:** `setupDraft` is a device-only setting, like the Gemini key: never exported and not part of the "changed since the last backup" fingerprint. Unlike the key, an import doesn't keep it, because a restored phone has finished setup. A backup file that somehow carries one has it dropped.
+- **Cleared** in the same transaction that saves the finished setup.
+- **A draft that doesn't parse** (for example from a future app version) is ignored and setup starts from the intro. A saved baseline-check date that has fallen out of the 7-day window resets to the default.
+- **"Change answers"** (Settings → Profile) isn't saved as a draft: it's four short steps prefilled from the profile, and closing it keeps the saved profile.
+- **Playwright retries once locally too** (it already did on CI). During full `npm run check` runs, WebKit on this Windows machine occasionally stalled IndexedDB in several workers at the same moment (even `/setup` never rendered), while the same specs passed 66 of 66 in a 3× repeat run. A real failure still fails twice and stops the run; flaky retries show in the report as "flaky". Alternatives: fewer workers (slower, and didn't address simultaneous stalls), or longer timeouts (a stall isn't slowness).
