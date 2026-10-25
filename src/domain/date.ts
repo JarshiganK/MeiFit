@@ -121,3 +121,14 @@ export function formatLongDate(date: LocalDate): string {
 export function minutesBetween(start: number, end: number): number {
   return Math.round((end - start) / MS_PER_MINUTE)
 }
+
+/** Minutes since local midnight (0–1439) for an instant. */
+export function minuteOfDay(instant: number): number {
+  const d = dayjs(instant)
+  return d.hour() * 60 + d.minute()
+}
+
+/** A short day label, e.g. "Sun 25 Oct". */
+export function formatShortDate(date: LocalDate): string {
+  return parse(date).format('ddd D MMM')
+}

@@ -6,6 +6,8 @@ import {
   compareDates,
   datesInRange,
   formatLongDate,
+  formatShortDate,
+  minuteOfDay,
   dayRange,
   daysBetween,
   isDayOver,
@@ -212,5 +214,19 @@ describe('minutesBetween', () => {
   it('rounds to whole minutes and is negative when reversed', () => {
     expect(minutesBetween(0, 90_000)).toBe(2)
     expect(minutesBetween(60_000, 0)).toBe(-1)
+  })
+})
+
+describe('minuteOfDay', () => {
+  it('counts minutes since local midnight', () => {
+    expect(minuteOfDay(atLocalTime('2026-10-25', 0, 0))).toBe(0)
+    expect(minuteOfDay(atLocalTime('2026-10-25', 18, 30))).toBe(1110)
+    expect(minuteOfDay(atLocalTime('2026-10-25', 23, 59))).toBe(1439)
+  })
+})
+
+describe('formatShortDate', () => {
+  it('shows the weekday, day and month', () => {
+    expect(formatShortDate('2026-10-25')).toBe('Sun 25 Oct')
   })
 })

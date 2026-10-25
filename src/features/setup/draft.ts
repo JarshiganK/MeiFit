@@ -1,3 +1,4 @@
+import { parseNumber } from '../../domain/number'
 import { DEFAULT_ROUTINE, type SetupAnswers } from '../../domain/setup'
 import type { ActivityLevel, Goal, Pace, Sex } from '../../domain/targets'
 import type { Profile } from '../../db/types'
@@ -50,12 +51,6 @@ export const EMPTY_DRAFT: Draft = {
   sleepHours: DEFAULT_ROUTINE.sleepTargetMin / 60,
   studyGoalHours: DEFAULT_ROUTINE.studyGoalHours,
   blockMin: DEFAULT_ROUTINE.blockMin,
-}
-
-/** "69,5" → 69.5; empty → undefined; anything else that isn't a number → NaN. */
-export function parseNumber(text: string): number | undefined {
-  const trimmed = text.trim().replace(',', '.')
-  return trimmed === '' ? undefined : Number(trimmed)
 }
 
 export function draftToAnswers(draft: Draft): Partial<SetupAnswers> {
