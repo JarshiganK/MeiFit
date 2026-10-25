@@ -1,3 +1,4 @@
+import type { FocusTimer } from '../domain/study'
 import { db } from './db'
 
 /** Every setting and its type. Add keys here as features need them. */
@@ -12,6 +13,8 @@ export interface SettingsMap {
   setupDraft: unknown
   /** Bedtime (epoch ms) of a sleep started with "Going to sleep" and not ended yet. */
   openSleep: number
+  /** The running focus timer, if any (plan §12: it keeps its start time). */
+  focusTimer: FocusTimer | null
 }
 
 export type SettingKey = keyof SettingsMap
