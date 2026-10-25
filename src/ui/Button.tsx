@@ -20,7 +20,12 @@ export function Button({
   ...rest
 }: ButtonProps) {
   return (
-    <button type={type} className={cx(buttonClass({ variant, size, block }), className)} {...rest}>
+    <button
+      type={type}
+      data-variant={variant ?? 'primary'}
+      className={cx(buttonClass({ variant, size, block }), className)}
+      {...rest}
+    >
       {icon && (
         <span aria-hidden="true" className="inline-flex">
           {icon}

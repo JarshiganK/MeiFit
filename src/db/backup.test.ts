@@ -6,10 +6,11 @@ import {
   backupFileName,
   createBackup,
   deleteAllData,
+  fingerprintTables,
   forgetExport,
-  lastExport,
+  getBackupStatus,
   parseBackup,
-  recordExport,
+  prepareExport,
   restoreBackup,
   serializeBackup,
   summarizeBackup,
@@ -236,16 +237,17 @@ describe('summarizeBackup', () => {
 
 describe('export log', () => {
   it('records each export and finds the latest', async () => {
-    expect(await lastExport()).toBeUndefined()
-    await recordExport(new Date(2026, 9, 19, 9).getTime())
-    await recordExport(NOW)
-    expect((await lastExport())?.date).toBe('2026-10-25')
+    expect((await getBackupStatus()).last).toBeNull()
+    await prepareExport(new Date(2026, 9, 19, 9).getTime())
+    await prepareExport(NOW)
+    expect((await getBackupStatus()).last?.date).toBe('2026-10-25')
+    expect(await db.exportLogs.count()).toBe(2)
   })
 
   it('forgets an export that was cancelled', async () => {
-    const id = await recordExport(NOW)
-    await forgetExport(id)
-    expect(await lastExport()).toBeUndefined()
+    const { logId } = await prepareExport(NOW)
+    await forgetExport(logId)
+    expect((await getBackupStatus()).last).toBeNull()
   })
 })
 
@@ -254,5 +256,84 @@ describe('deleteAllData', () => {
     await seed()
     await deleteAllData()
     for (const name of TABLE_NAMES) expect(await db.table(name).count()).toBe(0)
+  })
+})
+
+describe('backup status', () => {
+  async function seedWithoutExports() {
+    const tables = sampleTables()
+    tables.exportLogs = []
+    await seed(tables)
+  }
+
+  it('needs no backup on a phone with no data', async () => {
+    await setSetting('debug', true) // settings alone aren't "data"
+    expect(await getBackupStatus()).toMatchObject({
+      last: null,
+      hasData: false,
+      needsBackup: false,
+    })
+  })
+
+  it('needs a backup when there is data but no backup', async () => {
+    await seedWithoutExports()
+    expect(await getBackupStatus()).toMatchObject({
+      last: null,
+      hasData: true,
+      changedSinceLast: true,
+      needsBackup: true,
+    })
+  })
+
+  it('is up to date right after an export, and the file carries its own entry', async () => {
+    await seedWithoutExports()
+    const { backup, logId } = await prepareExport(NOW)
+    expect(backup.tables.exportLogs).toEqual([
+      { id: logId, at: NOW, date: '2026-10-25', fingerprint: expect.any(String) },
+    ])
+    const status = await getBackupStatus()
+    expect(status.last?.id).toBe(logId)
+    expect(status).toMatchObject({ changedSinceLast: false, needsBackup: false })
+  })
+
+  it.each([
+    ['a new weigh-in', () => db.bodyLogs.add({ date: '2026-10-26', at: NOW, weightKg: 68.8 })],
+    ['a deleted meal', () => db.meals.clear()],
+    ['an edited food', () => db.foods.update(1, { kcal: 210 })],
+    ['a changed setting', () => setSetting('fitnessCheckIntervalWeeks', 6)],
+  ])('notices %s after the export', async (_label, change) => {
+    await seedWithoutExports()
+    await prepareExport(NOW)
+    await change()
+    expect(await getBackupStatus()).toMatchObject({ changedSinceLast: true, needsBackup: true })
+  })
+
+  it('ignores the export log itself and device-only settings', async () => {
+    await seedWithoutExports()
+    await prepareExport(NOW)
+    await setSetting('geminiKey', 'new-key')
+    expect((await getBackupStatus()).needsBackup).toBe(false)
+  })
+
+  it('treats an older export entry without a fingerprint as changed', async () => {
+    await seed() // the fixture's export entry predates fingerprints
+    expect(await getBackupStatus()).toMatchObject({ changedSinceLast: true, needsBackup: true })
+  })
+
+  it('is up to date after that backup is restored on another phone', async () => {
+    await seedWithoutExports()
+    const { backup } = await prepareExport(NOW)
+    const text = serializeBackup(backup)
+    await deleteAllData()
+    await restoreBackup(parseBackup(text))
+    expect((await getBackupStatus()).needsBackup).toBe(false)
+  })
+
+  it('fingerprints the same data the same way every time', async () => {
+    await seedWithoutExports()
+    const a = fingerprintTables((await createBackup(NOW)).tables)
+    const b = fingerprintTables((await createBackup(NOW + 60_000)).tables)
+    expect(a).toBe(b)
+    expect(a).toMatch(/^[0-9a-f]+$/)
   })
 })

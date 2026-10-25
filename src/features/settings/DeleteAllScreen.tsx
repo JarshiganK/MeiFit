@@ -6,17 +6,25 @@ import { useTheme } from '../../app/useTheme'
 import { en } from '../../copy/en'
 import { deleteAllData } from '../../db/backup'
 import { Button, Card, TextField, useToast } from '../../ui'
+import { BackupStatusNote } from './BackupStatusNote'
+import { useBackupStatus } from './useBackupStatus'
 import { useExportBackup } from './useExportBackup'
 
-/** The one action that asks for a typed confirmation instead of offering undo (CLAUDE.md §7). */
+/**
+ * The one action that asks for a typed confirmation instead of offering undo
+ * (CLAUDE.md §7). When data isn't backed up, "Back up first" is the main action.
+ */
 export function DeleteAllScreen() {
   const navigate = useNavigate()
   const toast = useToast()
   const { setPref } = useTheme()
   const { exportBackup, busy } = useExportBackup()
+  const status = useBackupStatus()
   const [typed, setTyped] = useState('')
   const [deleting, setDeleting] = useState(false)
   const confirmed = typed.trim().toUpperCase() === en.deleteAll.confirmWord
+  // Until the status loads, assume a backup is needed: the safe default.
+  const needsBackup = status?.needsBackup ?? true
 
   const deleteEverything = async () => {
     setDeleting(true)
@@ -31,22 +39,28 @@ export function DeleteAllScreen() {
     }
   }
 
+  const backUpButton = (
+    <Button
+      variant={needsBackup ? 'primary' : 'ghost'}
+      block
+      size={needsBackup ? 'lg' : 'md'}
+      icon={<Download size={20} />}
+      disabled={busy}
+      onClick={() => void exportBackup()}
+    >
+      {busy ? en.data.exporting : needsBackup ? en.data.backUpFirst : en.deleteAll.backUpAgain}
+    </Button>
+  )
+
   return (
     <>
       <ScreenHeader title={en.deleteAll.title} backTo="/settings" />
       <div className="flex flex-col gap-4 pt-2">
         <Card>
           <p>{en.deleteAll.body}</p>
-          <Button
-            variant="secondary"
-            block
-            className="mt-4"
-            icon={<Download size={20} />}
-            disabled={busy}
-            onClick={() => void exportBackup()}
-          >
-            {en.deleteAll.exportFirst}
-          </Button>
+          <div className="mt-4">
+            <BackupStatusNote status={status} />
+          </div>
         </Card>
         <Card>
           <form
@@ -64,17 +78,20 @@ export function DeleteAllScreen() {
               autoCorrect="off"
               spellCheck={false}
             />
-            <Button
-              type="submit"
-              variant="danger"
-              block
-              size="lg"
-              className="mt-4"
-              icon={<Trash2 size={20} />}
-              disabled={!confirmed || deleting}
-            >
-              {en.deleteAll.button}
-            </Button>
+            <div className="mt-4 grid gap-2">
+              {needsBackup && backUpButton}
+              <Button
+                type="submit"
+                variant={needsBackup ? 'secondary' : 'danger'}
+                block
+                size={needsBackup ? 'md' : 'lg'}
+                icon={<Trash2 size={20} />}
+                disabled={!confirmed || deleting}
+              >
+                {en.deleteAll.button}
+              </Button>
+              {!needsBackup && backUpButton}
+            </div>
           </form>
         </Card>
       </div>

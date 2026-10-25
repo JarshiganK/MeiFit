@@ -216,27 +216,100 @@ const ROW_CHECKS: Record<TableName, Check> = {
   }),
   moodLogs: shape({ id, date, energy: num, mood: num }),
   stepsLogs: shape({ id, date, steps: nonNegative, source: oneOf('import', 'manual') }),
-  exportLogs: shape({ id, at: instant, date }),
+  exportLogs: shape({ id, at: instant, date, fingerprint: optional(text) }),
 }
 
 // ---------------------------------------------------------------- export
 
+/** Every table as it would appear in a backup (device-only settings removed). */
+async function readTables(): Promise<BackupTables> {
+  const entries = await Promise.all(
+    TABLE_NAMES.map(async (name) => [name, await db.table(name).toArray()] as const),
+  )
+  const tables = Object.fromEntries(entries) as BackupTables
+  tables.settings = tables.settings.filter(
+    (row) => !DEVICE_ONLY_SETTINGS.includes(row.key as SettingKey),
+  )
+  return tables
+}
+
+function wrap(tables: BackupTables, now: number): BackupFile {
+  return {
+    app: BACKUP_APP,
+    schemaVersion: SCHEMA_VERSION,
+    exportedAt: now,
+    exportedOn: toLocalDate(now),
+    tables,
+  }
+}
+
 export async function createBackup(now: number): Promise<BackupFile> {
-  return db.transaction('r', db.tables, async () => {
-    const entries = await Promise.all(
-      TABLE_NAMES.map(async (name) => [name, await db.table(name).toArray()] as const),
-    )
-    const tables = Object.fromEntries(entries) as BackupTables
-    tables.settings = tables.settings.filter(
-      (row) => !DEVICE_ONLY_SETTINGS.includes(row.key as SettingKey),
-    )
-    return {
-      app: BACKUP_APP,
-      schemaVersion: SCHEMA_VERSION,
-      exportedAt: now,
-      exportedOn: toLocalDate(now),
-      tables,
+  return db.transaction('r', db.tables, async () => wrap(await readTables(), now))
+}
+
+/**
+ * A short hash of everything a backup would hold, except the export log itself.
+ * Two phones with the same data get the same fingerprint, so it survives a
+ * restore. Not cryptographic: it only answers "has anything changed?".
+ */
+export function fingerprintTables(tables: BackupTables): string {
+  const content = JSON.stringify({ ...tables, exportLogs: [] })
+  // cyrb53: a fast 53-bit string hash with good spread.
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < content.length; i++) {
+    const ch = content.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)
+}
+
+/**
+ * Logs the export and builds the file in one transaction, so the file carries
+ * its own log entry (the weekly quest survives a restore) along with the
+ * fingerprint of the data it holds.
+ */
+export async function prepareExport(now: number): Promise<{ backup: BackupFile; logId: number }> {
+  return db.transaction('rw', db.tables, async () => {
+    const tables = await readTables()
+    const entry: ExportLog = {
+      at: now,
+      date: toLocalDate(now),
+      fingerprint: fingerprintTables(tables),
     }
+    const logId = await db.exportLogs.add(entry)
+    if (logId === undefined) throw new Error('The export log entry was not saved')
+    tables.exportLogs.push({ ...entry, id: logId })
+    return { backup: wrap(tables, now), logId }
+  })
+}
+
+export interface BackupStatus {
+  last: ExportLog | null
+  /** Anything worth protecting: settings alone don't count. */
+  hasData: boolean
+  changedSinceLast: boolean
+  /** True when replacing or deleting now would lose something not in a backup. */
+  needsBackup: boolean
+}
+
+const UNTRACKED_FOR_HAS_DATA: readonly TableName[] = ['exportLogs', 'settings']
+
+export async function getBackupStatus(): Promise<BackupStatus> {
+  return db.transaction('r', db.tables, async () => {
+    const tables = await readTables()
+    const last = tables.exportLogs.reduce<ExportLog | null>(
+      (latest, row) => (latest === null || row.at >= latest.at ? row : latest),
+      null,
+    )
+    const hasData = TABLE_NAMES.some(
+      (name) => !UNTRACKED_FOR_HAS_DATA.includes(name) && tables[name].length > 0,
+    )
+    const changedSinceLast = last?.fingerprint !== fingerprintTables(tables)
+    return { last, hasData, changedSinceLast, needsBackup: hasData && changedSinceLast }
   })
 }
 
@@ -248,20 +321,9 @@ export function backupFileName(backup: BackupFile): string {
   return `daily-quest-backup-${backup.exportedOn}.json`
 }
 
-/** Logs an export for the weekly "Export a backup" quest. */
-export async function recordExport(now: number): Promise<number> {
-  const id = await db.exportLogs.add({ at: now, date: toLocalDate(now) })
-  if (id === undefined) throw new Error('The export log entry was not saved')
-  return id
-}
-
 /** Removes an export log entry, e.g. when the user cancelled the share sheet. */
 export async function forgetExport(id: number): Promise<void> {
   await db.exportLogs.delete(id)
-}
-
-export function lastExport(): Promise<ExportLog | undefined> {
-  return db.exportLogs.orderBy('at').last()
 }
 
 // ---------------------------------------------------------------- import
