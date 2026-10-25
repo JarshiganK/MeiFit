@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { atLocalTime } from '../domain/date'
+import { CUSTOM_FOOD_ID, customItem, mealItem } from '../domain/food'
+import { createBackup, parseBackup, serializeBackup } from './backup'
 import { db } from './db'
 import {
   activeMenu,
+  allCombos,
   allFoods,
   changeItemPortion,
+  deleteCombo,
   deleteMeal,
+  drinkLogs,
+  logCombo,
+  logCustom,
+  restoreCombo,
+  saveCombo,
   getMeal,
   logFood,
   mealsOn,
@@ -158,5 +167,72 @@ describe('editing the log', () => {
     expect((await getMeal(id))?.slot).toBe('dinner')
     await deleteMeal(id)
     expect(await mealsOn(DAY)).toEqual([])
+  })
+})
+
+describe('custom entries, combos and drinks', () => {
+  it('logs a custom entry without a menu item, and it survives a backup check', async () => {
+    const id = await logCustom({
+      date: DAY,
+      at: LUNCH,
+      slot: 'lunch',
+      item: customItem('Shop kottu', 950, 30, true),
+    })
+    expect(await getMeal(id)).toMatchObject({ source: 'custom', kcal: 950, proteinG: 30 })
+    expect((await getMeal(id))?.items[0]?.foodId).toBe(CUSTOM_FOOD_ID)
+    const text = serializeBackup(await createBackup(LUNCH))
+    expect(() => parseBackup(text)).not.toThrow()
+  })
+
+  it('saves a meal as a combo and logs it in one tap at today’s menu values', async () => {
+    const riceFood = await addFood(rice)
+    const teaFood = await addFood(tea)
+    const comboId = await saveCombo('  My lunch ', [
+      mealItem({ ...riceFood, id: riceFood.id! }, 2),
+      customItem('Something', 100, 1, false),
+      mealItem({ ...teaFood, id: teaFood.id! }, 1),
+    ])
+    const [combo] = await allCombos()
+    expect(combo).toMatchObject({ id: comboId, name: 'My lunch' })
+    expect(combo?.items).toEqual([
+      { foodId: riceFood.id, portion: 2 },
+      { foodId: teaFood.id, portion: 1 },
+    ])
+
+    await saveFood({ ...riceFood, kcal: 210 })
+    const mealId = await logCombo({ date: DAY, at: LUNCH, slot: 'lunch', combo: combo! })
+    expect(await getMeal(mealId!)).toMatchObject({ source: 'combo', kcal: 440, slot: 'lunch' })
+  })
+
+  it('logs nothing for a combo whose foods are all gone', async () => {
+    const id = await logCombo({
+      date: DAY,
+      at: LUNCH,
+      slot: 'lunch',
+      combo: { id: 1, name: 'Old', items: [{ foodId: 99, portion: 1 }] },
+    })
+    expect(id).toBeUndefined()
+    expect(await mealsOn(DAY)).toEqual([])
+  })
+
+  it('deletes and restores combos', async () => {
+    const id = await saveCombo('A', [])
+    const removed = await deleteCombo(id)
+    expect(await allCombos()).toEqual([])
+    await restoreCombo(removed!)
+    expect(await allCombos()).toHaveLength(1)
+  })
+
+  it('lists every drink logged', async () => {
+    const food = await addFood(tea)
+    await logFood({ date: DAY, at: LUNCH, slot: 'lunch', food, portion: 1 })
+    await logFood({
+      date: '2026-10-20',
+      at: LUNCH - 5 * 86_400_000,
+      slot: 'dinner',
+      food,
+      portion: 2,
+    })
+    expect(await drinkLogs()).toHaveLength(2)
   })
 })

@@ -17,6 +17,8 @@ export const nonNegative: Check = (v) => num(v) && (v as number) >= 0
 export const positive: Check = (v) => num(v) && (v as number) > 0
 export const int: Check = (v) => Number.isInteger(v)
 export const id: Check = (v) => Number.isInteger(v) && (v as number) > 0
+/** A menu item id, or 0 for a one-off custom entry. */
+export const foodRef: Check = (v) => Number.isInteger(v) && (v as number) >= 0
 export const bool: Check = (v) => typeof v === 'boolean'
 export const date: Check = isLocalDate
 export const defined: Check = (v) => v !== undefined

@@ -6,7 +6,9 @@
 import type { LocalDate } from '../domain/date'
 import {
   CATEGORY_ORDER,
+  CUSTOM_FOOD_ID,
   changePortion,
+  comboItems,
   mealItem,
   slotForFood,
   sumItems,
@@ -14,7 +16,7 @@ import {
   type MealSlot,
 } from '../domain/food'
 import { db } from './db'
-import type { Food, Meal } from './types'
+import type { Combo, Food, Meal } from './types'
 
 function byMenuOrder(a: Food, b: Food): number {
   return (
@@ -127,4 +129,81 @@ export async function removeItem(mealId: number, itemIndex: number): Promise<Mea
 /** Moves a meal to another slot (drinks stay drinks). */
 export async function moveMeal(mealId: number, slot: MealSlot): Promise<void> {
   await db.meals.update(mealId, { slot })
+}
+
+/** Logs a one-off entry (outside food with estimated values); returns its id for Undo. */
+export async function logCustom(input: {
+  date: LocalDate
+  at: number
+  slot: MealSlot
+  item: MealItem
+}): Promise<number> {
+  const items = [input.item]
+  const id = await db.meals.add({
+    date: input.date,
+    at: input.at,
+    slot: input.slot,
+    items,
+    ...sumItems(items),
+    source: 'custom',
+  })
+  if (id === undefined) throw new Error('The meal was not saved')
+  return id
+}
+
+// ---------------------------------------------------------------- combos
+
+export async function allCombos(): Promise<Combo[]> {
+  const combos = await db.combos.toArray()
+  return combos.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** Saves the menu items of a meal as a combo (custom entries can't be part of one). */
+export async function saveCombo(name: string, items: readonly MealItem[]): Promise<number> {
+  const id = await db.combos.add({
+    name: name.trim(),
+    items: items
+      .filter((item) => item.foodId !== CUSTOM_FOOD_ID)
+      .map(({ foodId, portion }) => ({ foodId, portion })),
+  })
+  if (id === undefined) throw new Error('The combo was not saved')
+  return id
+}
+
+export async function deleteCombo(id: number): Promise<Combo | undefined> {
+  const combo = await db.combos.get(id)
+  await db.combos.delete(id)
+  return combo
+}
+
+export async function restoreCombo(combo: Combo): Promise<void> {
+  await db.combos.put(combo)
+}
+
+/** Logs a whole combo as one meal, priced from today's menu; returns its id for Undo. */
+export async function logCombo(input: {
+  date: LocalDate
+  at: number
+  slot: MealSlot
+  combo: Combo
+}): Promise<number | undefined> {
+  const items = comboItems(input.combo, await db.foods.toArray())
+  if (items.length === 0) return undefined
+  const id = await db.meals.add({
+    date: input.date,
+    at: input.at,
+    slot: input.slot,
+    items,
+    ...sumItems(items),
+    source: 'combo',
+  })
+  if (id === undefined) throw new Error('The meal was not saved')
+  return id
+}
+
+// ---------------------------------------------------------------- drinks
+
+/** Every drink ever logged, for picking the +1 drink. */
+export async function drinkLogs(): Promise<Meal[]> {
+  return db.meals.where('slot').equals('drink').toArray()
 }

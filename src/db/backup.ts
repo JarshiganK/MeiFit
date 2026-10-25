@@ -14,6 +14,7 @@ import {
   bool,
   date,
   defined,
+  foodRef,
   id,
   int,
   isRecord,
@@ -71,7 +72,7 @@ export const BACKUP_UPGRADES: Readonly<Record<number, BackupUpgrade>> = {}
 
 const instant = num
 const mealItem = shape({
-  foodId: id,
+  foodId: foodRef,
   name: text,
   portion: positive,
   kcal: nonNegative,

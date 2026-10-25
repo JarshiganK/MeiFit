@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_ROUTINE, buildSetup, type SetupAnswers } from '../domain/setup'
 import { db } from './db'
-import { currentTarget, getProfile, latestWeighIn, saveSetup } from './profile'
+import {
+  acceptProteinThreshold,
+  currentTarget,
+  getProfile,
+  latestWeighIn,
+  mealsBetween,
+  saveSetup,
+} from './profile'
 import { STARTER_MENU } from './seed/starterMenu'
 import { getSetting } from './settings'
 
@@ -109,5 +116,56 @@ describe('saveSetup when answers change later', () => {
     expect(await db.bodyLogs.count()).toBe(1)
     expect(await getSetting('baselineCheckDue', '')).toBe('2026-10-31')
     expect((await getProfile())?.goal).toBe('maintain')
+  })
+})
+
+describe('acceptProteinThreshold', () => {
+  it('starts a calibration row from the given day, carrying the other targets', async () => {
+    await db.targetHistory.add({
+      startsOn: '2026-10-01',
+      kcal: 2021,
+      kcalFloor: 1626,
+      proteinG: 124,
+      proteinQuestThresholdG: null,
+      reason: 'setup',
+    })
+    await acceptProteinThreshold('2026-10-15', 90)
+    expect(await currentTarget('2026-10-14')).toMatchObject({ proteinQuestThresholdG: null })
+    expect(await currentTarget('2026-10-15')).toMatchObject({
+      startsOn: '2026-10-15',
+      kcal: 2021,
+      proteinG: 124,
+      proteinQuestThresholdG: 90,
+      reason: 'calibration',
+    })
+    // Changing it again the same day updates that row.
+    await acceptProteinThreshold('2026-10-15', 95)
+    expect(await db.targetHistory.count()).toBe(2)
+    expect((await currentTarget('2026-10-15'))?.proteinQuestThresholdG).toBe(95)
+  })
+
+  it('needs targets to calibrate', async () => {
+    await expect(acceptProteinThreshold('2026-10-15', 90)).rejects.toThrow()
+  })
+
+  it('reads meals between two dates', async () => {
+    const meal = {
+      at: 0,
+      slot: 'lunch' as const,
+      items: [],
+      kcal: 0,
+      proteinG: 0,
+      source: 'tap' as const,
+    }
+    await db.meals.bulkAdd([
+      { ...meal, date: '2026-09-30' },
+      { ...meal, date: '2026-10-01' },
+      { ...meal, date: '2026-10-14' },
+      { ...meal, date: '2026-10-15' },
+    ])
+    expect((await mealsBetween('2026-10-01', '2026-10-14')).map((m) => m.date)).toEqual([
+      '2026-10-01',
+      '2026-10-14',
+    ])
   })
 })

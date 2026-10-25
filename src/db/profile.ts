@@ -2,7 +2,7 @@ import type { LocalDate } from '../domain/date'
 import type { SetupResult } from '../domain/setup'
 import { db } from './db'
 import { STARTER_MENU } from './seed/starterMenu'
-import type { BodyLog, Profile, TargetHistory } from './types'
+import type { BodyLog, Meal, Profile, TargetHistory } from './types'
 
 export function getProfile(): Promise<Profile | undefined> {
   return db.profile.get('me')
@@ -72,4 +72,33 @@ export async function saveSetup(result: SetupResult, options: SaveSetupOptions):
       await db.settings.delete('setupDraft')
     },
   )
+}
+
+/**
+ * Saves the calibrated protein quest threshold from `date` on (plan §3, day 15).
+ * The other targets carry over; a row already starting that day is updated.
+ */
+export async function acceptProteinThreshold(date: LocalDate, thresholdG: number): Promise<void> {
+  await db.transaction('rw', db.targetHistory, async () => {
+    const current = await currentTarget(date)
+    if (!current) throw new Error('No targets to calibrate')
+    const row: TargetHistory = {
+      startsOn: date,
+      kcal: current.kcal,
+      kcalFloor: current.kcalFloor,
+      proteinG: current.proteinG,
+      proteinQuestThresholdG: thresholdG,
+      reason: 'calibration',
+    }
+    if (current.startsOn === date && current.id !== undefined) {
+      await db.targetHistory.update(current.id, { proteinQuestThresholdG: thresholdG })
+    } else {
+      await db.targetHistory.add(row)
+    }
+  })
+}
+
+/** Meals for each date from `from` to `to`, for the protein calibration. */
+export async function mealsBetween(from: LocalDate, to: LocalDate): Promise<Meal[]> {
+  return db.meals.where('date').between(from, to, true, true).toArray()
 }
