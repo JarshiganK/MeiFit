@@ -85,3 +85,22 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **`.gitattributes` forces LF line endings.** Git on this machine converts to CRLF on checkout, which would fail `prettier --check`.
 - **The lint-rule test warms ESLint up once in `beforeAll`** (180 s limit). The first config load took over a minute with coverage running in parallel and hit the 5 s per-test limit. The assertions are unchanged.
 - **Initial JS is now 136.6 KB gzipped** (was 105.3 KB) because Dexie loads at start-up. That's expected: the Status screen reads from it.
+
+## 2026-10-25: Phase 1 item 2 (backup, storage, privacy, delete all)
+
+- **Owner correction: no git writes.** CLAUDE.md §9 applies again. Commits, pushes and branches are the owner's; checkpoints list suggested commits only.
+- **Backup format:** `{ app: "daily-quest", schemaVersion, exportedAt (epoch ms), exportedOn (local date), tables }`, with every table from schema version 1. File name: `daily-quest-backup-YYYY-MM-DD.json`.
+- **Import order:** parse JSON, check the app name, reject newer versions, upgrade older ones step by step (`BACKUP_UPGRADES`), validate every row of every table, and only then write. The write is one Dexie transaction that clears every table and adds the backup's rows, so any failure (for example a duplicate weigh-in date the database refuses) rolls back and leaves the existing data untouched. Unknown tables are rejected; extra fields on a row are allowed.
+- **Import replaces everything; it never merges.** Merging two phones' logs would need conflict rules the plan doesn't define.
+- **Import is reviewed and then undoable.** A sheet shows the backup's date, profile name and counts, and the confirm button says what happens ("Replace my data"). After the import, a 10-second Undo toast restores a snapshot taken just before it (CLAUDE.md §7 prefers undo over "are you sure?").
+- **The export is logged before the file is made,** so the backup contains its own export entry and the weekly "Export a backup" quest survives a restore. If the share sheet is cancelled or saving fails, the entry is removed again. The e2e test found this: the first version logged after making the file.
+- **Saving uses the share sheet when it can share files** (iOS: Save to Files works from the Home Screen app) and otherwise a normal download. The e2e tests turn off `navigator.canShare` because automated browsers can't drive the share sheet.
+- **The Gemini key stays on the device:** it's left out of every export, and an import keeps the key already on the phone.
+- **Delete all data** asks the user to type DELETE (case-insensitive, trimmed). It empties every table in one transaction, resets the theme to System, returns to Status and shows a toast. It offers "Export a backup first". The service worker's app cache stays, so the app still opens offline.
+- **Persistent storage:** Settings shows whether storage is protected, how much is used, and a "Protect my data" button. A refusal is explained kindly. Setup (item 3) will also ask, as plan §2 says.
+- **Backup reminder:** "No backup yet" or "Last backup: N days ago", with a gentle nudge when there's no backup or the last one is over 7 days old.
+- **Privacy page and `PRIVACY.md` are kept identical by a test** that parses the Markdown into sections, paragraphs and bullets and compares them with the in-app copy. The Gemini paragraph says the feature is coming in a later version, which is accurate for Phase 1.
+- **Every screen is lazy-loaded** with `React.lazy` (owner request), behind a Suspense fallback that holds the header's height so nothing shifts. The debug-console boot is a dynamic import too, so Dexie isn't in the initial bundle. Initial JS dropped from 136.6 KB to 106.6 KB gzipped. All chunks are precached, so tabs still open offline.
+- **App tests now wait for lazy screens** (`findBy…` for the first lookup after a render or navigation). The assertions are unchanged.
+- **A `TextField` primitive** joins the design system (label, hint, error, 16 px input). Setup will reuse it.
+- **Testing Library's async timeout is 3 s** (was 1 s). Under a full parallel coverage run, the first fake-IndexedDB read in a worker sometimes took over a second and a `findBy` timed out, although the screen had rendered. The assertions are unchanged.

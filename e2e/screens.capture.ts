@@ -12,7 +12,10 @@ for (const theme of THEMES) {
     for (const { path, heading } of SCREENS) {
       await page.goto(path)
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
-      const name = path === '/' ? 'status' : path.slice(1)
+      // Let database reads (live queries, storage status) settle before capturing.
+      await page.waitForLoadState('networkidle')
+      await page.waitForTimeout(500)
+      const name = path === '/' ? 'status' : path.slice(1).replaceAll('/', '-')
       await page.screenshot({ path: `${OUT}/${name}-${theme}.png` })
     }
 

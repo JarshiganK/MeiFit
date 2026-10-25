@@ -7,6 +7,8 @@ export const SCREENS = [
   { path: '/study', heading: 'Study' },
   { path: '/progress', heading: 'Progress' },
   { path: '/settings', heading: 'Settings' },
+  { path: '/settings/privacy', heading: 'Privacy' },
+  { path: '/settings/delete', heading: 'Delete all data' },
 ] as const
 
 export type ThemeName = 'dark' | 'light'
