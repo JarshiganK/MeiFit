@@ -6,14 +6,12 @@
  * Derived values (XP, levels, streaks, quest results…) are never stored.
  */
 import type { LocalDate } from '../domain/date'
+import type { ActivityLevel, Goal, Pace, Sex } from '../domain/targets'
+
+export type { ActivityLevel, Goal, Pace, Sex }
 
 /** Epoch milliseconds. */
 export type Instant = number
-
-export type Sex = 'male' | 'female' | 'other'
-export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very'
-export type Goal = 'lose' | 'maintain' | 'gain'
-export type Pace = 'slow' | 'standard'
 
 /** One row, id `'me'`. Current weight lives in bodyLogs, not here. */
 export interface Profile {
@@ -228,6 +226,12 @@ export interface ExportLog {
   id?: number
   at: Instant
   date: LocalDate
+  /**
+   * Hash of the data this export held, to tell whether anything changed since.
+   * Not indexed, so adding it needed no schema version. Entries made before it
+   * existed have none and count as "changed".
+   */
+  fingerprint?: string
 }
 
 /** The record type stored in each table (kept in step with STORES_V1 by schema.ts). */

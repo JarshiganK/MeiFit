@@ -6,6 +6,8 @@ export interface SettingsMap {
   geminiKey: string
   geminiModel: string
   fitnessCheckIntervalWeeks: number
+  /** Due date of the baseline fitness check booked at setup (YYYY-MM-DD). */
+  baselineCheckDue: string
 }
 
 export type SettingKey = keyof SettingsMap
