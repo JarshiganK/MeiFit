@@ -158,3 +158,19 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **A draft that doesn't parse** (for example from a future app version) is ignored and setup starts from the intro. A saved baseline-check date that has fallen out of the 7-day window resets to the default.
 - **"Change answers"** (Settings → Profile) isn't saved as a draft: it's four short steps prefilled from the profile, and closing it keeps the saved profile.
 - **Playwright retries once locally too** (it already did on CI). During full `npm run check` runs, WebKit on this Windows machine occasionally stalled IndexedDB in several workers at the same moment (even `/setup` never rendered), while the same specs passed 66 of 66 in a 3× repeat run. A real failure still fails twice and stops the run; flaky retries show in the report as "flaky". Alternatives: fewer workers (slower, and didn't address simultaneous stalls), or longer timeouts (a stall isn't slowness).
+
+## 2026-10-26: Phase 1 item 4 (starter menu, tap logging, daily totals)
+
+- **One `meals` row per log action.** A tap adds one row with one item; Undo deletes exactly that row. The Food screen groups rows by slot, so "Lunch has 2 protein items" counts across every lunch row that day. Alternative: one row per slot per day with items appended (harder Undo and edits).
+- **Two taps:** tap a menu tile, then a portion button in the sheet. Rice offers ½–3 cups, sized items Small / Normal / Large (0.75 / 1 / 1.5×), counted items × 1–10. Each portion button shows its ≈ calories (except counts, to fit 10 buttons).
+- **The meal slot** is preselected from the time of day (approved table) and can be changed before tapping. Drinks always go in the drinks slot. A logged line can be moved to another meal later.
+- **Logging on earlier days:** the day switcher goes back to the setup date. A past-day log is stamped at a typical time for the slot (breakfast 08:00, lunch 13:00, snack 16:30, dinner 19:30, drinks 10:30), so its date never drifts.
+- **Snapshots:** each item keeps name, calories, protein and the protein flag. Changing a logged portion re-prices from that snapshot, never from the current menu.
+- **Rounding:** calories are stored as whole numbers, protein to 0.1 g. Totals show calories rounded to 10 with "≈" and protein in whole grams.
+- **Under-18s** see protein and the plate rule only: no calorie numbers on the Food screen, the portion sheet or the menu editor. A menu item they add is saved with 0 kcal (calories never show for them, and the protein sanity check is skipped at 0 kcal).
+- **Menu editor** (Settings → Menu): add, edit, and "Remove from menu" (archive, with Undo and Put back). Items are never deleted, so past logs and backups stay consistent. Validation: name required, unique (ignoring case), at most 40 characters; 0–3,000 kcal; 0–200 g protein; protein × 4 can't exceed the calories.
+- **`useToday`** keeps "today" current at midnight and when the app returns from the background.
+- **New primitive `SelectField`** (native select, so iOS shows its own picker).
+- **`Sheet` ignores the close event of its own `close()`.** Browsers queue that event; if the sheet was reopened before it arrived, it used to close the new sheet. A unit test holds the event back to prove it.
+- **Design review:** the Logged card moved above the menu (plan §10 lists meals by slot first), so today's meals show without scrolling past the whole menu.
+- **Accessibility:** logged lines and menu-editor rows use their visible text as the accessible name, with a visually hidden "Change" / "Edit" in front (axe's label-in-name rule).
