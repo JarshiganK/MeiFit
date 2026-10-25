@@ -50,7 +50,7 @@ describe('app shell', () => {
   })
 
   it.each([
-    ['Food', 'Meals will live here'],
+    ['Food', 'Your menu is empty'],
     ['Train', 'Your training plan goes here'],
     ['Study', 'Focus blocks start here'],
     ['Progress', 'Progress shows up over time'],

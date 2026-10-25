@@ -55,6 +55,26 @@ for (const theme of THEMES) {
       await shot(page, `${path === '/' ? 'status' : path.slice(1).replaceAll('/', '-')}-${theme}`)
     }
 
+    // Food with a few meals logged, and the portion sheet.
+    await page.goto('/food')
+    await page.getByText('Lunch', { exact: true }).click()
+    for (const [tile, portion] of [
+      [/^Rice\s?≈/, /^2 cups\s?≈/],
+      [/^Chicken curry\s?≈/, /^Normal\s?≈/],
+      [/^Varai or other vegetables\s?≈/, /^Large\s?≈/],
+    ] as const) {
+      await page.getByRole('button', { name: tile }).click()
+      await page.getByRole('dialog').getByRole('button', { name: portion }).click()
+    }
+    await page.getByRole('button', { name: 'Dismiss' }).click()
+    await shot(page, `food-logged-${theme}`, true)
+    await page.getByRole('button', { name: /^Rice\s?≈/ }).click()
+    await shot(page, `food-portion-sheet-${theme}`)
+    await page.keyboard.press('Escape')
+    await page.goto('/settings/menu')
+    await page.getByRole('button', { name: /^Edit\s?Chicken curry/ }).click()
+    await shot(page, `menu-edit-sheet-${theme}`)
+
     await page.goto('/dev/ui')
     await expect(page.getByRole('heading', { name: 'Design tokens' })).toBeVisible()
     await shot(page, `dev-ui-${theme}`, true)

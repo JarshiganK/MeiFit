@@ -31,6 +31,9 @@ export const DeleteAllScreen = lazy(() =>
 export const ProfileScreen = lazy(() =>
   import('../features/settings/ProfileScreen').then((m) => ({ default: m.ProfileScreen })),
 )
+export const MenuEditorScreen = lazy(() =>
+  import('../features/settings/MenuEditorScreen').then((m) => ({ default: m.MenuEditorScreen })),
+)
 export const SetupFlow = lazy(() =>
   import('../features/setup/SetupFlow').then((m) => ({ default: m.SetupFlow })),
 )

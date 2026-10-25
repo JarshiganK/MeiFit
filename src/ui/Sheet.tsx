@@ -7,7 +7,7 @@ export interface SheetProps {
   open: boolean
   onClose: () => void
   title: string
-  description?: string
+  description?: string | undefined
   children?: ReactNode
 }
 
@@ -17,6 +17,7 @@ export interface SheetProps {
  */
 export function Sheet({ open, onClose, title, description, children }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const closedByUs = useRef(false)
   const titleId = useId()
   const descId = useId()
 
@@ -24,7 +25,10 @@ export function Sheet({ open, onClose, title, description, children }: SheetProp
     const dialog = ref.current
     if (!dialog) return
     if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
+    if (!open && dialog.open) {
+      closedByUs.current = true
+      dialog.close()
+    }
   }, [open])
 
   return (
@@ -39,6 +43,11 @@ export function Sheet({ open, onClose, title, description, children }: SheetProp
         onClose()
       }}
       onClose={() => {
+        // Our own close() already told the parent; its event can arrive after a reopen.
+        if (closedByUs.current) {
+          closedByUs.current = false
+          return
+        }
         if (open) onClose()
       }}
       onClick={(event) => {

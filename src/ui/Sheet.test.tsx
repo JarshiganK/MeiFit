@@ -62,4 +62,19 @@ describe('Sheet', () => {
     fireEvent(dialog(), new Event('close'))
     expect(dialog().open).toBe(false)
   })
+
+  it('stays open when reopened before the last close event arrives', async () => {
+    render(<Harness />)
+    // Browsers queue the close event; hold it back to model a fast reopen.
+    let sendLateClose = () => {}
+    dialog().close = function close(this: HTMLDialogElement) {
+      this.removeAttribute('open')
+      sendLateClose = () => this.dispatchEvent(new Event('close'))
+    }
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Open', hidden: true }))
+    sendLateClose()
+    expect(dialog().open).toBe(true)
+  })
 })

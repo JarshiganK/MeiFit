@@ -5,6 +5,7 @@ import { ErrorScreen } from './ErrorScreen'
 import {
   DeleteAllScreen,
   FoodScreen,
+  MenuEditorScreen,
   PrivacyScreen,
   ProfileScreen,
   ProgressScreen,
@@ -40,6 +41,7 @@ export const routes: RouteObject[] = [
       { path: 'progress', element: <ProgressScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'settings/profile', element: <ProfileScreen /> },
+      { path: 'settings/menu', element: <MenuEditorScreen /> },
       { path: 'settings/privacy', element: <PrivacyScreen /> },
       { path: 'settings/delete', element: <DeleteAllScreen /> },
       { path: '*', element: <NotFound /> },
