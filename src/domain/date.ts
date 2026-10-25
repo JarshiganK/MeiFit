@@ -132,3 +132,22 @@ export function minuteOfDay(instant: number): number {
 export function formatShortDate(date: LocalDate): string {
   return parse(date).format('ddd D MMM')
 }
+
+const INPUT_FORMAT = 'YYYY-MM-DDTHH:mm'
+
+/** An instant as a `datetime-local` input value in local time, e.g. "2026-10-25T23:10". */
+export function toDateTimeInput(instant: number): string {
+  return dayjs(instant).format(INPUT_FORMAT)
+}
+
+/** Reads a `datetime-local` value as local time; undefined if it isn't one. */
+export function fromDateTimeInput(value: string): number | undefined {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return undefined
+  const parsed = dayjs(value)
+  return parsed.isValid() && parsed.format(INPUT_FORMAT) === value ? parsed.valueOf() : undefined
+}
+
+/** A clock time for people to read, e.g. "23:10". */
+export function formatTime(instant: number): string {
+  return dayjs(instant).format('HH:mm')
+}
