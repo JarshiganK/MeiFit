@@ -112,6 +112,11 @@ export function ageOn(birthDate: LocalDate, onDate: LocalDate): number {
   return y - by - (hadBirthday ? 0 : 1)
 }
 
+/** A date for people to read, e.g. "25 Oct 2026". */
+export function formatLongDate(date: LocalDate): string {
+  return parse(date).format('D MMM YYYY')
+}
+
 /** Whole minutes from `start` to `end` (epoch ms), rounded. */
 export function minutesBetween(start: number, end: number): number {
   return Math.round((end - start) / MS_PER_MINUTE)

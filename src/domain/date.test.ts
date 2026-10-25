@@ -5,6 +5,7 @@ import {
   atLocalTime,
   compareDates,
   datesInRange,
+  formatLongDate,
   dayRange,
   daysBetween,
   isDayOver,
@@ -197,6 +198,13 @@ describe('ageOn', () => {
     expect(ageOn('2008-02-29', '2026-02-28')).toBe(17)
     expect(ageOn('2008-02-29', '2026-03-01')).toBe(18)
     expect(ageOn('2008-02-29', '2028-02-29')).toBe(20)
+  })
+})
+
+describe('formatLongDate', () => {
+  it('formats a stored date for reading, without shifting the day', () => {
+    expect(formatLongDate('2026-10-25')).toBe('25 Oct 2026')
+    expect(formatLongDate('2027-01-01')).toBe('1 Jan 2027')
   })
 })
 

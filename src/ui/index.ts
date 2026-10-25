@@ -20,5 +20,6 @@ export {
 } from './styles'
 export { Switch } from './Switch'
 export { Tabs } from './Tabs'
+export { TextField } from './TextField'
 export { ToastProvider } from './Toast'
 export { useToast } from './toastContext'
