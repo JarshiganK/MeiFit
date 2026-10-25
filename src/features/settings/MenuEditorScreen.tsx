@@ -1,10 +1,17 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, Drumstick, Plus, RotateCcw } from 'lucide-react'
+import { ChevronRight, Drumstick, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { en } from '../../copy/en'
-import { allFoods, saveFood, setFoodArchived } from '../../db/food'
+import {
+  allCombos,
+  allFoods,
+  deleteCombo,
+  restoreCombo,
+  saveFood,
+  setFoodArchived,
+} from '../../db/food'
 import { getProfile } from '../../db/profile'
 import type { Food, FoodCategory, FoodUnit } from '../../db/types'
 import { ageOn, toLocalDate } from '../../domain/date'
@@ -66,6 +73,7 @@ export function MenuEditorScreen() {
     const profile = await getProfile()
     return {
       foods: await allFoods(),
+      combos: await allCombos(),
       isMinor: profile ? ageOn(profile.birthDate, toLocalDate(Date.now())) < ADULT_AGE : false,
     }
   }, [])
@@ -138,6 +146,41 @@ export function MenuEditorScreen() {
             </Card>
           )
         })}
+
+        <Card title={en.menuEditor.combosTitle} subtitle={en.menuEditor.combosHint}>
+          {data.combos.length === 0 ? (
+            <p className="text-sm text-muted">{en.menuEditor.noCombos}</p>
+          ) : (
+            <ul className="-my-2 divide-y divide-border">
+              {data.combos.map((combo) => (
+                <li key={combo.id} className="flex min-h-13 items-center gap-3 py-1">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{combo.name}</span>
+                    <span className="block text-sm text-muted">
+                      {en.menuEditor.comboItems(combo.items.length)}
+                    </span>
+                  </span>
+                  <IconButton
+                    label={en.menuEditor.deleteCombo(combo.name)}
+                    icon={<Trash2 size={20} />}
+                    onClick={() => {
+                      void deleteCombo(combo.id!).then((removed) => {
+                        if (!removed) return
+                        toast.show({
+                          message: en.menuEditor.comboDeleted(combo.name),
+                          action: {
+                            label: en.common.undo,
+                            onAction: () => void restoreCombo(removed),
+                          },
+                        })
+                      })
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
 
         {archived.length > 0 && (
           <Card title={en.menuEditor.archivedTitle} subtitle={en.menuEditor.archivedHint}>

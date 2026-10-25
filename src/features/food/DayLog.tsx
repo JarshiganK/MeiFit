@@ -1,10 +1,17 @@
 import { Drumstick } from 'lucide-react'
 import { useState } from 'react'
 import { en } from '../../copy/en'
-import { changeItemPortion, moveMeal, removeItem, restoreMeal } from '../../db/food'
+import { changeItemPortion, moveMeal, removeItem, restoreMeal, saveCombo } from '../../db/food'
 import type { Food, Meal, MealItem } from '../../db/types'
-import { SLOT_ORDER, dayTotals, displayProtein, type MealSlot } from '../../domain/food'
-import { Button, Card, SegmentedControl, Sheet, useToast } from '../../ui'
+import {
+  CUSTOM_FOOD_ID,
+  MAIN_MEALS,
+  SLOT_ORDER,
+  dayTotals,
+  displayProtein,
+  type MealSlot,
+} from '../../domain/food'
+import { Button, Card, SegmentedControl, Sheet, TextField, useToast } from '../../ui'
 import { approxKcal, portionLabel } from './format'
 import { PortionPicker } from './PortionPicker'
 
@@ -27,6 +34,7 @@ export interface DayLogProps {
 export function DayLog({ title, meals, foods, hideKcal }: DayLogProps) {
   const toast = useToast()
   const [selected, setSelected] = useState<Selected | null>(null)
+  const [comboSlot, setComboSlot] = useState<MealSlot | null>(null)
   const totals = dayTotals(meals)
   const food = selected ? foods.find((f) => f.id === selected.item.foodId) : undefined
 
@@ -68,12 +76,24 @@ export function DayLog({ title, meals, foods, hideKcal }: DayLogProps) {
                       : en.food.slotSummary(approxKcal(slotTotals.kcal), protein)}
                   </p>
                 </div>
-                {slot !== 'drink' && slot !== 'snack' && (
-                  <p className="mt-0.5 inline-flex items-center gap-1 text-sm text-vit">
-                    <Drumstick aria-hidden="true" size={14} />
-                    {en.food.proteinItems(slotTotals.proteinItems)}
-                  </p>
-                )}
+                <div className="flex flex-wrap items-center justify-between gap-x-4">
+                  {slot !== 'drink' && slot !== 'snack' && (
+                    <p className="inline-flex min-h-11 items-center gap-1 text-sm text-vit">
+                      <Drumstick aria-hidden="true" size={14} />
+                      {en.food.proteinItems(slotTotals.proteinItems)}
+                    </p>
+                  )}
+                  {(MAIN_MEALS as readonly MealSlot[]).includes(slot) &&
+                    menuItemsIn(slotMeals).length >= 2 && (
+                      <button
+                        type="button"
+                        onClick={() => setComboSlot(slot)}
+                        className="min-h-11 text-sm font-semibold text-accent underline-offset-4 hover:underline"
+                      >
+                        {en.food.saveCombo(en.food.slotSingular[slot])}
+                      </button>
+                    )}
+                </div>
                 <ul className="mt-1 divide-y divide-border">
                   {slotMeals.flatMap((meal) =>
                     meal.items.map((item, index) => {
@@ -151,6 +171,65 @@ export function DayLog({ title, meals, foods, hideKcal }: DayLogProps) {
           </div>
         )}
       </Sheet>
+      <Sheet
+        open={comboSlot !== null}
+        onClose={() => setComboSlot(null)}
+        title={en.food.saveComboTitle}
+      >
+        {comboSlot && (
+          <ComboForm
+            defaultName={en.food.slotSingular[comboSlot]}
+            onSave={async (name) => {
+              await saveCombo(name, menuItemsIn(meals.filter((meal) => meal.slot === comboSlot)))
+              setComboSlot(null)
+              toast.show({ message: en.food.comboSaved(name.trim()) })
+            }}
+          />
+        )}
+      </Sheet>
     </Card>
+  )
+}
+
+/** The logged lines that came from the menu (custom entries can't join a combo). */
+function menuItemsIn(meals: Meal[]): MealItem[] {
+  return meals.flatMap((meal) => meal.items).filter((item) => item.foodId !== CUSTOM_FOOD_ID)
+}
+
+function ComboForm({
+  defaultName,
+  onSave,
+}: {
+  defaultName: string
+  onSave: (name: string) => Promise<void>
+}) {
+  const [name, setName] = useState(defaultName)
+  const [error, setError] = useState(false)
+  return (
+    <form
+      noValidate
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (name.trim() === '') {
+          setError(true)
+          return
+        }
+        void onSave(name)
+      }}
+    >
+      <TextField
+        label={en.food.comboName}
+        hint={en.food.comboNameHint}
+        value={name}
+        maxLength={40}
+        autoComplete="off"
+        onChange={(event) => setName(event.target.value)}
+        {...(error ? { error: en.menuEditor.errors.required } : {})}
+      />
+      <Button type="submit" block size="lg">
+        {en.menuEditor.save}
+      </Button>
+    </form>
   )
 }

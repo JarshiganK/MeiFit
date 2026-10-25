@@ -39,6 +39,9 @@ export function MenuGrid({ foods, hideKcal, onPick }: MenuGridProps) {
             <h3 className="mb-2 text-sm font-semibold text-muted">
               {en.food.categories[category]}
             </h3>
+            {category === 'plate' && (
+              <p className="-mt-1 mb-2 text-sm text-muted">{en.food.platesHint}</p>
+            )}
             <ul className="grid grid-cols-2 gap-2">
               {items.map((food) => (
                 <li key={food.id}>

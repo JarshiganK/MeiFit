@@ -134,3 +134,45 @@ for (const theme of ['dark', 'light'] as ThemeName[]) {
     await expectNoSeriousA11yIssues(page)
   })
 }
+
+test('flex day budget, +1 drink and a custom entry', async ({ page }) => {
+  await page.goto('/food')
+  await page.getByText('Lunch', { exact: true }).click()
+  await logItem(page, withKcal('Rice'), withKcal('2 cups'))
+  await page.getByRole('switch', { name: 'Flex day' }).click()
+  const totals = page.getByRole('region', { name: 'Totals' })
+  await expect(totals.getByText('≈1,620 left for dinner')).toBeVisible()
+
+  await page.getByRole('button', { name: '+1 Plain tea' }).click()
+  await expect(page.getByText('Added Plain tea (× 1) to drinks')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Something else' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Add something else' })
+  await sheet.getByLabel('What was it?').fill('Shop kottu')
+  await sheet.getByLabel('Calories per serving (kcal)').fill('950')
+  await sheet.getByLabel('Protein per serving (g)').fill('30')
+  await sheet.getByRole('button', { name: 'Add' }).click()
+  await expect(page.getByText('Added Shop kottu to lunch')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByRole('switch', { name: 'Flex day' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+  const meals = (await idbAll(page, 'meals')) as { source: string }[]
+  expect(meals.map((meal) => meal.source)).toEqual(['tap', 'tap', 'custom'])
+})
+
+for (const theme of ['dark', 'light'] as ThemeName[]) {
+  test(`Food on a flex day with the custom entry form passes axe (${theme})`, async ({ page }) => {
+    await useTheme(page, theme)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/food')
+    await page.getByRole('switch', { name: 'Flex day' }).click()
+    await expect(page.getByText(/left for dinner/)).toBeVisible()
+    await expectNoSeriousA11yIssues(page)
+    await page.getByRole('button', { name: 'Something else' }).click()
+    await expect(page.getByRole('dialog', { name: 'Add something else' })).toBeVisible()
+    await expectNoSeriousA11yIssues(page)
+  })
+}
