@@ -10,6 +10,8 @@ export interface SettingsMap {
   baselineCheckDue: string
   /** A half-finished first-launch setup, so it resumes after iOS closes the app. */
   setupDraft: unknown
+  /** Bedtime (epoch ms) of a sleep started with "Going to sleep" and not ended yet. */
+  openSleep: number
 }
 
 export type SettingKey = keyof SettingsMap
