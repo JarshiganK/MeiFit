@@ -52,7 +52,7 @@ describe('app shell', () => {
   it.each([
     ['Food', 'Your menu is empty'],
     ['Train', 'Your training plan goes here'],
-    ['Study', 'Focus blocks start here'],
+    ['Study', 'Focus timer'],
     ['Progress', 'Weight'],
   ])('navigates to %s and shows its designed empty state', async (tab, emptyTitle) => {
     renderAt('/')
