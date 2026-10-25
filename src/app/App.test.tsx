@@ -24,9 +24,9 @@ function renderAt(path: string) {
 }
 
 describe('app shell', () => {
-  it('opens on Status with five labelled tabs and a Settings link', () => {
+  it('opens on Status with five labelled tabs and a Settings link', async () => {
     renderAt('/')
-    expect(screen.getByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
     const nav = screen.getByRole('navigation', { name: 'Main' })
     const links = within(nav).getAllByRole('link')
     expect(links.map((l) => l.textContent)).toEqual([
@@ -51,7 +51,7 @@ describe('app shell', () => {
   ])('navigates to %s and shows its designed empty state', async (tab, emptyTitle) => {
     renderAt('/')
     await userEvent.click(screen.getByRole('link', { name: tab }))
-    expect(screen.getByRole('heading', { level: 1, name: tab })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: tab })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: emptyTitle })).toBeInTheDocument()
   })
 
@@ -59,7 +59,7 @@ describe('app shell', () => {
     renderAt('/nowhere')
     expect(screen.getByRole('heading', { level: 2, name: 'This page doesn’t exist' })).toBeVisible()
     await userEvent.click(screen.getByRole('link', { name: 'Go to Status' }))
-    expect(screen.getByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
   })
 
   it('shows a calm offline banner when the connection drops', () => {
@@ -95,7 +95,7 @@ describe('app shell', () => {
 describe('settings', () => {
   it('switches the theme and remembers it', async () => {
     renderAt('/settings')
-    expect(screen.getByRole('radio', { name: 'System' })).toBeChecked()
+    expect(await screen.findByRole('radio', { name: 'System' })).toBeChecked()
     await userEvent.click(screen.getByRole('radio', { name: 'Light' }))
     expect(document.documentElement.dataset.theme).toBe('light')
     expect(localStorage.getItem('dq.theme')).toBe('light')
@@ -105,7 +105,7 @@ describe('settings', () => {
 
   it('turns the debug console on and off', async () => {
     renderAt('/settings')
-    const toggle = screen.getByRole('switch', { name: 'Debug console' })
+    const toggle = await screen.findByRole('switch', { name: 'Debug console' })
     expect(toggle).toHaveAttribute('aria-checked', 'false')
     await userEvent.click(toggle)
     await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'))
@@ -115,9 +115,9 @@ describe('settings', () => {
     expect(await getSetting('debug', true)).toBe(false)
   })
 
-  it('shows the health note, version and a way back', () => {
+  it('shows the health note, version and a way back', async () => {
     renderAt('/settings')
-    expect(screen.getByText(/estimate, not medical advice/)).toBeInTheDocument()
+    expect(await screen.findByText(/estimate, not medical advice/)).toBeInTheDocument()
     expect(
       screen.getByText(/^Version \d+\.\d+\.\d+ · built \d{4}-\d{2}-\d{2}$/),
     ).toBeInTheDocument()

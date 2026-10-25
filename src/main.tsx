@@ -4,10 +4,11 @@ import './ui/theme.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
-import { bootDebugConsole } from './app/debug'
 
-// The debug console is optional; a failure here must never stop the app.
-bootDebugConsole().catch((error: unknown) => console.error(error))
+// The debug console is optional and loads after the app; a failure here must never stop the app.
+import('./app/debug')
+  .then((debug) => debug.bootDebugConsole())
+  .catch((error: unknown) => console.error(error))
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Missing #root element')

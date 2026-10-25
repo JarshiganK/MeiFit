@@ -1,0 +1,30 @@
+/*
+ * Every screen is its own chunk, so the initial bundle holds only the shell.
+ * The service worker precaches the chunks, so tabs still open instantly offline.
+ */
+import { lazy } from 'react'
+
+export const StatusScreen = lazy(() =>
+  import('../features/status/StatusScreen').then((m) => ({ default: m.StatusScreen })),
+)
+export const FoodScreen = lazy(() =>
+  import('../features/food/FoodScreen').then((m) => ({ default: m.FoodScreen })),
+)
+export const TrainScreen = lazy(() =>
+  import('../features/train/TrainScreen').then((m) => ({ default: m.TrainScreen })),
+)
+export const StudyScreen = lazy(() =>
+  import('../features/study/StudyScreen').then((m) => ({ default: m.StudyScreen })),
+)
+export const ProgressScreen = lazy(() =>
+  import('../features/progress/ProgressScreen').then((m) => ({ default: m.ProgressScreen })),
+)
+export const SettingsScreen = lazy(() =>
+  import('../features/settings/SettingsScreen').then((m) => ({ default: m.SettingsScreen })),
+)
+export const PrivacyScreen = lazy(() =>
+  import('../features/settings/PrivacyScreen').then((m) => ({ default: m.PrivacyScreen })),
+)
+export const DeleteAllScreen = lazy(() =>
+  import('../features/settings/DeleteAllScreen').then((m) => ({ default: m.DeleteAllScreen })),
+)

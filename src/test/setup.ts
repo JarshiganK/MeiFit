@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import 'fake-indexeddb/auto'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 import { db } from '../db/db'
+
+// The first database read in a worker can exceed the 1 s default while the
+// whole suite runs in parallel with coverage, so give findBy/waitFor longer.
+configure({ asyncUtilTimeout: 3000 })
 
 // Every test starts with an empty database.
 afterEach(async () => {

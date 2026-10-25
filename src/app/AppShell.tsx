@@ -1,6 +1,8 @@
+import { Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router'
 import { en } from '../copy/en'
 import { OfflineBanner } from './OfflineBanner'
+import { ScreenFallback } from './ScreenFallback'
 import { TabBar } from './TabBar'
 import { UpdatePrompt } from './UpdatePrompt'
 
@@ -19,7 +21,9 @@ export function AppShell() {
         tabIndex={-1}
         className="mx-auto w-full max-w-lg flex-1 px-safe pb-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+1.5rem)] outline-none"
       >
-        <Outlet />
+        <Suspense fallback={<ScreenFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
       <TabBar />
       <UpdatePrompt />

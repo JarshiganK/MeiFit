@@ -1,12 +1,16 @@
 import type { RouteObject } from 'react-router'
-import { FoodScreen } from '../features/food/FoodScreen'
-import { ProgressScreen } from '../features/progress/ProgressScreen'
-import { SettingsScreen } from '../features/settings/SettingsScreen'
-import { StatusScreen } from '../features/status/StatusScreen'
-import { StudyScreen } from '../features/study/StudyScreen'
-import { TrainScreen } from '../features/train/TrainScreen'
 import { AppShell } from './AppShell'
 import { ErrorScreen } from './ErrorScreen'
+import {
+  DeleteAllScreen,
+  FoodScreen,
+  PrivacyScreen,
+  ProgressScreen,
+  SettingsScreen,
+  StatusScreen,
+  StudyScreen,
+  TrainScreen,
+} from './lazyScreens'
 import { NotFound } from './NotFound'
 
 /** The design gallery exists only in development builds (CLAUDE.md §7). */
@@ -31,6 +35,8 @@ export const routes: RouteObject[] = [
       { path: 'study', element: <StudyScreen /> },
       { path: 'progress', element: <ProgressScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
+      { path: 'settings/privacy', element: <PrivacyScreen /> },
+      { path: 'settings/delete', element: <DeleteAllScreen /> },
       { path: '*', element: <NotFound /> },
     ],
   },
