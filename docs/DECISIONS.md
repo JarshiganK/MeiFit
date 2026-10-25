@@ -199,3 +199,13 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Several sleeps on one day:** the longest is the main sleep (`mainSleep`), as approved; the quest uses it in item 11.
 - **The target line** is neutral when a night was short ("Your target is 7 h"), never a judgement.
 - **e2e uses Playwright's clock** to cross midnight deterministically.
+
+## 2026-10-26: Phase 1 item 7 (weight log and weekly average chart)
+
+- **Where:** a Weight card on Progress (plan §10). Today's weight is one field and Save. A later weigh-in the same day replaces the earlier one (approved default), with Undo. Earlier weigh-ins (the last 7) can be edited or deleted from the list.
+- **Values:** 25–300 kg, stored to 0.1 kg. A comma works as the decimal point.
+- **Weekly averages** are Monday–Sunday (plan §5). The card shows this week's average with its number of weigh-ins, and the change from the previous week that has weigh-ins, in kg and %. The calorie adjustment suggestions that use these averages arrive with the weekly report (Phase 2).
+- **Chart:** Chart.js through react-chartjs-2, in its own lazy chunk (57 KB gzipped), so initial JS only grew by 0.7 KB. It shows the last 12 weeks: each weigh-in as a dot, and each week's average as a line point placed at the middle of that week's weigh-ins (so the current week never reaches into the future). Only the Chart.js parts used are registered. Colours come from the theme tokens at render time and follow the theme.
+- **Accessibility:** the canvas is hidden from screen readers. The figure has a written summary ("Weekly averages over 5 weeks, from 70.5 kg to 69.2 kg") and a visually hidden table of weekly averages.
+- **Offline:** the chart chunk is precached like every other chunk; e2e reloads Progress offline and checks the chart draws.
+- **Test changes, explained:** `src/app/App.test.tsx` expected Progress's Phase 0 placeholder ("Progress shows up over time"). Progress now opens on the Weight card, so the test checks for that heading. Component tests stub the chart, because jsdom has no canvas; e2e draws the real one.
