@@ -69,3 +69,19 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **The axe e2e tests emulate reduced motion and wait for running animations.** A toast fading in was occasionally scanned while translucent, which gave a false contrast failure on WebKit. Colours and layout are identical with reduced motion, so the scan still covers the real UI. This was a new test, so no existing test was weakened.
 - **Design screenshots** (`npm run screens`) run against the dev server, because `/dev/ui` is dev-only. They aren't part of `npm run check`.
 - **Initial JS budget check** (`scripts/check-bundle.mjs`) runs after every build and fails above 200 KB gzipped.
+
+## 2026-10-25: Phase 1 item 1 (database and dates)
+
+- **Instants are stored as epoch milliseconds; dates as local `YYYY-MM-DD` strings.** Epoch ms are time-zone-free, so a log's date can always be rebuilt (plan §5). Alternative: ISO strings, which invite `toISOString` mistakes.
+- **Dates are parsed with plain `dayjs(date)`.** Day.js reads date-only strings as local midnight, unlike `new Date('YYYY-MM-DD')`, which reads them as UTC. No Day.js plugins are needed: weekdays and ages are computed directly.
+- **Age on 29 February birthdays** ticks over on 1 March in non-leap years.
+- **Ids are auto-incrementing numbers.** Backup import replaces the whole database, so ids never need to merge across devices. Alternative: UUIDs (larger, unnecessary).
+- **`profile` is a single row with id `'me'`.** Current weight lives in `bodyLogs` (plan §9 has no weight field on the profile).
+- **Unique date indexes** on `bodyLogs`, `moodLogs` and `stepsLogs` enforce one entry per day (approved default; plan §11 says imports replace). `sleepLogs` allows several per wake date (naps); the longest counts.
+- **Meal items snapshot** name, kcal, protein and the counts-as-protein flag, so menu edits never change past days (plan §3).
+- **`targetHistory.reason`** adds `calibration` for the day-15 protein threshold, beside setup, fitness check and manual.
+- **Version 1 is frozen by a test** (`src/db/schema.test.ts` keeps a literal copy), so an edit to a released version fails CI instead of risking real data.
+- **The debug flag moved to the Dexie `settings` table**, as planned. A Phase 0 flag in localStorage is migrated once at start-up and then removed. The Phase 0 unit test for "toggles when storage is blocked" was replaced: that path no longer exists, and the new test covers blocked storage during the migration.
+- **`.gitattributes` forces LF line endings.** Git on this machine converts to CRLF on checkout, which would fail `prettier --check`.
+- **The lint-rule test warms ESLint up once in `beforeAll`** (180 s limit). The first config load took over a minute with coverage running in parallel and hit the 5 s per-test limit. The assertions are unchanged.
+- **Initial JS is now 136.6 KB gzipped** (was 105.3 KB) because Dexie loads at start-up. That's expected: the Status screen reads from it.

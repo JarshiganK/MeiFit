@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { fileURLToPath } from 'node:url'
 import { ESLint } from 'eslint'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 // Only the project's syntax rules run here, so type information isn't needed
 // for the in-memory snippets.
@@ -17,6 +17,12 @@ async function ruleIds(code: string, filePath: string): Promise<string[]> {
 }
 
 describe('project lint rules', () => {
+  // The first lint loads the whole ESLint config and its plugins, which can take
+  // a minute while other test workers share the CPU. Do it once, up front.
+  beforeAll(async () => {
+    await ruleIds('export {}\n', 'src/app/warmup.ts')
+  }, 180_000)
+
   it('bans toISOString outside src/domain/date.ts', async () => {
     const messages = await ruleIds('export const d = new Date(0).toISOString()\n', 'src/app/x.ts')
     expect(messages.some((m) => m.includes('toISOString'))).toBe(true)

@@ -56,8 +56,8 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, then Phase 1 items 1–11. P
 
 ## Phase 1 build order
 
-1. Database setup (Dexie v1) and local-date helpers: **next**
-2. Backup export and import, persistent storage, Privacy page, delete all data
+1. Database setup (Dexie v1) and local-date helpers: **done** (`src/domain/date.ts`, `src/db/`)
+2. Backup export and import, persistent storage, Privacy page, delete all data: **next**
 3. First-launch setup and target calculation
 4. Starter menu, food tap logging and daily totals
 5. Combos, generic plates, drinks, outside food, flex budget, protein calibration
