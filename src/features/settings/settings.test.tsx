@@ -6,11 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ThemeProvider } from '../../app/ThemeProvider'
 import { routes } from '../../app/routes'
 import { en } from '../../copy/en'
-import { BACKUP_APP, createBackup, recordExport, serializeBackup } from '../../db/backup'
+import { BACKUP_APP, createBackup, prepareExport, serializeBackup } from '../../db/backup'
 import { db } from '../../db/db'
 import { SCHEMA_VERSION, TABLE_NAMES } from '../../db/schema'
 import { addDays, toLocalDate } from '../../domain/date'
-import { sampleTables } from '../../test/fixtures'
+import { sampleTables, seedProfile } from '../../test/fixtures'
 import { ToastProvider } from '../../ui'
 
 const saveFile = vi.hoisted(() => vi.fn())
@@ -29,18 +29,25 @@ function renderAt(path: string) {
   return router
 }
 
-async function seed() {
-  const tables = sampleTables()
+async function seed(tables = sampleTables()) {
   await db.transaction('rw', db.tables, async () => {
-    for (const name of TABLE_NAMES) await db.table(name).bulkAdd(tables[name])
+    for (const name of TABLE_NAMES) await db.table(name).bulkPut(tables[name])
   })
+}
+
+/** Data with no backup ever made. */
+async function seedWithoutExports() {
+  const tables = sampleTables()
+  tables.exportLogs = []
+  await seed(tables)
 }
 
 function backupFile(content: string): File {
   return new File([content], 'daily-quest-backup.json', { type: 'application/json' })
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await seedProfile()
   saveFile.mockResolvedValue('shared')
 })
 
@@ -56,7 +63,8 @@ describe('Settings → Your data', () => {
   })
 
   it('shows how long ago the last backup was', async () => {
-    await recordExport(new Date(`${addDays(toLocalDate(Date.now()), -3)}T09:00`).getTime())
+    const threeDaysAgo = addDays(toLocalDate(Date.now()), -3)
+    await db.exportLogs.add({ at: new Date(`${threeDaysAgo}T09:00`).getTime(), date: threeDaysAgo })
     renderAt('/settings')
     expect(await screen.findByText('Last backup: 3 days ago')).toBeInTheDocument()
     expect(screen.queryByText(en.data.nudge)).not.toBeInTheDocument()
@@ -216,7 +224,7 @@ describe('Settings → Delete all data', () => {
 
     await userEvent.click(button)
     expect(await screen.findByText('All data deleted.')).toBeInTheDocument()
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/setup'))
     for (const name of TABLE_NAMES) expect(await db.table(name).count()).toBe(0)
     expect(localStorage.getItem('dq.theme')).toBeNull()
   })
@@ -228,9 +236,106 @@ describe('Settings → Delete all data', () => {
     expect(await db.meals.count()).toBe(1)
   })
 
-  it('offers an export first', async () => {
+  it('makes "Back up first" the main action when data is not backed up', async () => {
+    await seedWithoutExports()
     renderAt('/settings/delete')
-    await userEvent.click(await screen.findByRole('button', { name: 'Export a backup first' }))
+
+    expect(await screen.findByText('No backup yet')).toBeInTheDocument()
+    expect(screen.getByText(en.data.backupWhy)).toBeInTheDocument()
+    const backUp = screen.getByRole('button', { name: 'Back up first' })
+    const remove = screen.getByRole('button', { name: 'Delete everything' })
+    expect(backUp).toHaveAttribute('data-variant', 'primary')
+    expect(remove).toHaveAttribute('data-variant', 'secondary')
+    expect(backUp.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    // After backing up, Delete becomes the main action again.
+    await userEvent.click(backUp)
     await waitFor(() => expect(saveFile).toHaveBeenCalledOnce())
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Delete everything' })).toHaveAttribute(
+        'data-variant',
+        'danger',
+      ),
+    )
+    expect(screen.getByText('Last backup: today')).toBeInTheDocument()
+    expect(screen.getByText(en.data.backupCurrent)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back up first' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back up again' })).toBeInTheDocument()
+  })
+
+  it('makes Delete the main action when everything is backed up', async () => {
+    await seedWithoutExports()
+    await prepareExport(Date.now())
+    renderAt('/settings/delete')
+    expect(await screen.findByText(en.data.backupCurrent)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete everything' })).toHaveAttribute(
+      'data-variant',
+      'danger',
+    )
+    expect(screen.queryByRole('button', { name: 'Back up first' })).not.toBeInTheDocument()
+  })
+
+  it('asks for a backup again once data changes after the last one', async () => {
+    await seedWithoutExports()
+    await prepareExport(Date.now())
+    await db.bodyLogs.add({ date: '2026-10-26', at: Date.now(), weightKg: 68.8 })
+    renderAt('/settings/delete')
+    expect(await screen.findByText(en.data.backupChanged)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back up first' })).toHaveAttribute(
+      'data-variant',
+      'primary',
+    )
+  })
+})
+
+describe('Import review: back up first', () => {
+  async function openReview(text: string) {
+    renderAt('/settings')
+    await userEvent.upload(await screen.findByTestId('backup-file-input'), backupFile(text))
+    return screen.findByRole('dialog', { name: 'Restore this backup?' })
+  }
+
+  it('shows the last backup and puts "Back up first" before Replace when data is not backed up', async () => {
+    await seed() // has data, and its only export entry predates fingerprints
+    const text = serializeBackup(await createBackup(Date.now()))
+    const sheet = await openReview(text)
+
+    expect(await within(sheet).findByText(/^Last backup:/)).toBeInTheDocument()
+    expect(within(sheet).getByText(en.data.backupChanged)).toBeInTheDocument()
+    const backUp = within(sheet).getByRole('button', { name: 'Back up first' })
+    const replace = within(sheet).getByRole('button', { name: 'Replace my data' })
+    expect(backUp).toHaveAttribute('data-variant', 'primary')
+    expect(replace).toHaveAttribute('data-variant', 'secondary')
+
+    await userEvent.click(backUp)
+    await waitFor(() => expect(saveFile).toHaveBeenCalledOnce())
+    await waitFor(() =>
+      expect(within(sheet).getByRole('button', { name: 'Replace my data' })).toHaveAttribute(
+        'data-variant',
+        'primary',
+      ),
+    )
+    expect(within(sheet).queryByRole('button', { name: 'Back up first' })).not.toBeInTheDocument()
+    expect(within(sheet).getByText('Last backup: today')).toBeInTheDocument()
+  })
+
+  it('says "No backup yet" when there has never been one', async () => {
+    await seedWithoutExports()
+    const text = serializeBackup(await createBackup(Date.now()))
+    const sheet = await openReview(text)
+    expect(await within(sheet).findByText('No backup yet')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Back up first' })).toBeInTheDocument()
+  })
+
+  it('makes Replace the main action when everything is backed up', async () => {
+    await seedWithoutExports()
+    const { backup } = await prepareExport(Date.now())
+    const sheet = await openReview(serializeBackup(backup))
+    expect(await within(sheet).findByText(en.data.backupCurrent)).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Replace my data' })).toHaveAttribute(
+      'data-variant',
+      'primary',
+    )
+    expect(within(sheet).queryByRole('button', { name: 'Back up first' })).not.toBeInTheDocument()
   })
 })

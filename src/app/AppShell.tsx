@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router'
 import { en } from '../copy/en'
+import { ProfileGate } from './lazyScreens'
 import { OfflineBanner } from './OfflineBanner'
 import { ScreenFallback } from './ScreenFallback'
 import { TabBar } from './TabBar'
@@ -22,7 +23,9 @@ export function AppShell() {
         className="mx-auto w-full max-w-lg flex-1 px-safe pb-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+1.5rem)] outline-none"
       >
         <Suspense fallback={<ScreenFallback />}>
-          <Outlet />
+          <ProfileGate>
+            <Outlet />
+          </ProfileGate>
         </Suspense>
       </main>
       <TabBar />

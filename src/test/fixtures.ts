@@ -1,3 +1,4 @@
+import { db } from '../db/db'
 import type { TableName } from '../db/schema'
 import type { TableRows } from '../db/types'
 
@@ -145,4 +146,9 @@ export function sampleTables(): SampleTables {
     stepsLogs: [{ id: 1, date: '2026-10-24', steps: 8234, source: 'import' }],
     exportLogs: [{ id: 1, at: new Date(2026, 9, 19, 9).getTime(), date: '2026-10-19' }],
   }
+}
+
+/** Saves the sample profile, so screens behind the setup gate can render. */
+export async function seedProfile(): Promise<void> {
+  await db.profile.put(sampleTables().profile[0]!)
 }

@@ -28,3 +28,13 @@ export const PrivacyScreen = lazy(() =>
 export const DeleteAllScreen = lazy(() =>
   import('../features/settings/DeleteAllScreen').then((m) => ({ default: m.DeleteAllScreen })),
 )
+export const ProfileScreen = lazy(() =>
+  import('../features/settings/ProfileScreen').then((m) => ({ default: m.ProfileScreen })),
+)
+export const SetupFlow = lazy(() =>
+  import('../features/setup/SetupFlow').then((m) => ({ default: m.SetupFlow })),
+)
+/** Reads the profile, so it brings the database with it: kept out of the initial bundle. */
+export const ProfileGate = lazy(() =>
+  import('./ProfileGate').then((m) => ({ default: m.ProfileGate })),
+)

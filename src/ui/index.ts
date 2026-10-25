@@ -1,5 +1,6 @@
 export { Button } from './Button'
 export { Card } from './Card'
+export { ChoiceCards, type Choice } from './ChoiceCards'
 export { cx } from './cx'
 export { EmptyState } from './EmptyState'
 export { IconButton } from './IconButton'

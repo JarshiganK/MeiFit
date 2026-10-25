@@ -2,14 +2,20 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { db } from '../db/db'
 import { getSetting } from '../db/settings'
+import { seedProfile } from '../test/fixtures'
 import { ToastProvider } from '../ui'
 import { ThemeProvider } from './ThemeProvider'
 import { routes } from './routes'
 import { useTheme } from './useTheme'
 
 vi.mock('eruda', () => ({ default: { init: vi.fn(), destroy: vi.fn() } }))
+
+beforeEach(async () => {
+  await seedProfile()
+})
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
@@ -57,7 +63,9 @@ describe('app shell', () => {
 
   it('shows a friendly page for unknown links', async () => {
     renderAt('/nowhere')
-    expect(screen.getByRole('heading', { level: 2, name: 'This page doesn’t exist' })).toBeVisible()
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'This page doesn’t exist' }),
+    ).toBeVisible()
     await userEvent.click(screen.getByRole('link', { name: 'Go to Status' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
   })
@@ -133,5 +141,22 @@ describe('useTheme', () => {
       return null
     }
     expect(() => render(<Probe />)).toThrow(/ThemeProvider/)
+  })
+})
+
+describe('setup gate', () => {
+  it('sends a phone with no profile to first-launch setup', async () => {
+    await db.profile.clear()
+    const router = renderAt('/food')
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Your day is a quest board' }),
+    ).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/setup')
+  })
+
+  it('sends a phone that already has a profile from setup to Status', async () => {
+    const router = renderAt('/setup')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Status' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
   })
 })

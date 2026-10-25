@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, HeartPulse, Lock, Monitor, Moon, Sun, Trash2 } from 'lucide-react'
+import { ChevronRight, HeartPulse, Lock, Monitor, Moon, Sun, Trash2, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ScreenHeader } from '../../app/ScreenHeader'
@@ -50,6 +50,15 @@ export function SettingsScreen() {
     <>
       <ScreenHeader title={en.settings.title} backTo="/" />
       <div className="flex flex-col gap-4 pt-2">
+        <Card>
+          <LinkRow
+            to="/settings/profile"
+            icon={<UserRound size={20} />}
+            label={en.profile.title}
+            hint={en.profile.hint}
+          />
+        </Card>
+
         <DataCard />
 
         <Card title={en.settings.appearance}>
