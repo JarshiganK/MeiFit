@@ -229,3 +229,27 @@ export interface ExportLog {
   at: Instant
   date: LocalDate
 }
+
+/** The record type stored in each table (kept in step with STORES_V1 by schema.ts). */
+export interface TableRows {
+  profile: Profile
+  targetHistory: TargetHistory
+  days: DayRecord
+  examPeriods: ExamPeriod
+  settings: SettingRow
+  foods: Food
+  meals: Meal
+  combos: Combo
+  exercises: Exercise
+  workoutPlans: WorkoutPlan
+  workoutSets: WorkoutSet
+  fitnessChecks: FitnessCheck
+  sleepLogs: SleepLog
+  bodyLogs: BodyLog
+  subjects: Subject
+  studySessions: StudySession
+  events: CalendarEvent
+  moodLogs: MoodLog
+  stepsLogs: StepsLog
+  exportLogs: ExportLog
+}

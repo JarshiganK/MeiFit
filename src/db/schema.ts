@@ -20,6 +20,7 @@ import type {
   Profile,
   SettingRow,
   SleepLog,
+  TableRows,
   StepsLog,
   StudySession,
   Subject,
@@ -87,3 +88,9 @@ export class DailyQuestDB extends Dexie {
     this.version(1).stores(STORES_V1)
   }
 }
+
+// Compile-time check: every table has a row type and every row type has a table.
+type SameKeys<A, B> = [Exclude<keyof A, keyof B> | Exclude<keyof B, keyof A>] extends [never]
+  ? true
+  : never
+export const TABLE_ROWS_MATCH_STORES: SameKeys<TableRows, typeof STORES_V1> = true
