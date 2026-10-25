@@ -1,9 +1,11 @@
 /**
  * Eruda debug console (plan §8, §15). It's a separate lazy chunk, so it costs
- * nothing until the toggle is on. The flag lives in localStorage for now and
- * moves to the Dexie settings table in Phase 1 item 1.
+ * nothing until the toggle is on. The flag lives in the Dexie settings table.
  */
-export const DEBUG_KEY = 'dq.debug'
+import { getSetting, setSetting } from '../db/settings'
+
+/** Where Phase 0 kept the flag, before the database existed. */
+export const LEGACY_DEBUG_KEY = 'dq.debug'
 
 interface Eruda {
   init: () => void
@@ -12,21 +14,12 @@ interface Eruda {
 
 let eruda: Eruda | null = null
 
-export function isDebugEnabled(): boolean {
-  try {
-    return localStorage.getItem(DEBUG_KEY) === '1'
-  } catch {
-    return false
-  }
+export function isDebugEnabled(): Promise<boolean> {
+  return getSetting('debug', false)
 }
 
 export async function setDebugEnabled(on: boolean): Promise<void> {
-  try {
-    if (on) localStorage.setItem(DEBUG_KEY, '1')
-    else localStorage.removeItem(DEBUG_KEY)
-  } catch {
-    // Storage blocked: the console still toggles for this session.
-  }
+  await setSetting('debug', on)
   if (on) await startDebugConsole()
   else stopDebugConsole()
 }
@@ -41,4 +34,27 @@ export async function startDebugConsole(): Promise<void> {
 export function stopDebugConsole(): void {
   eruda?.destroy()
   eruda = null
+}
+
+/** Moves a flag saved by the Phase 0 build into the settings table, once. */
+export async function migrateLegacyDebugFlag(): Promise<void> {
+  let legacy: string | null
+  try {
+    legacy = localStorage.getItem(LEGACY_DEBUG_KEY)
+  } catch {
+    return
+  }
+  if (legacy === null) return
+  if (legacy === '1') await setSetting('debug', true)
+  try {
+    localStorage.removeItem(LEGACY_DEBUG_KEY)
+  } catch {
+    // Nothing to clean up if storage is blocked.
+  }
+}
+
+/** Runs at start-up: loads the console if the user left it on. */
+export async function bootDebugConsole(): Promise<void> {
+  await migrateLegacyDebugFlag()
+  if (await isDebugEnabled()) await startDebugConsole()
 }

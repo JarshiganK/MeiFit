@@ -1,5 +1,6 @@
 import { HeartPulse, Monitor, Moon, Sun } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import type { ReactNode } from 'react'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { isDebugEnabled, setDebugEnabled } from '../../app/debug'
 import type { ThemePref } from '../../app/theme'
@@ -16,7 +17,7 @@ const THEME_OPTIONS: { value: ThemePref; label: string; icon: ReactNode }[] = [
 
 export function SettingsScreen() {
   const { pref, setPref } = useTheme()
-  const [debug, setDebug] = useState(isDebugEnabled)
+  const debug = useLiveQuery(isDebugEnabled, [], false)
 
   return (
     <>
@@ -44,10 +45,7 @@ export function SettingsScreen() {
             label={en.settings.debug}
             hint={en.settings.debugHint}
             checked={debug}
-            onChange={(on) => {
-              setDebug(on)
-              void setDebugEnabled(on)
-            }}
+            onChange={(on) => void setDebugEnabled(on)}
           />
         </Card>
 

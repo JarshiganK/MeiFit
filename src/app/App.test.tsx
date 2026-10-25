@@ -1,8 +1,9 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it, vi } from 'vitest'
+import { getSetting } from '../db/settings'
 import { ToastProvider } from '../ui'
 import { ThemeProvider } from './ThemeProvider'
 import { routes } from './routes'
@@ -105,11 +106,13 @@ describe('settings', () => {
   it('turns the debug console on and off', async () => {
     renderAt('/settings')
     const toggle = screen.getByRole('switch', { name: 'Debug console' })
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
     await userEvent.click(toggle)
-    expect(toggle).toHaveAttribute('aria-checked', 'true')
-    expect(localStorage.getItem('dq.debug')).toBe('1')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'))
+    expect(await getSetting('debug', false)).toBe(true)
     await userEvent.click(toggle)
-    expect(localStorage.getItem('dq.debug')).toBeNull()
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'false'))
+    expect(await getSetting('debug', true)).toBe(false)
   })
 
   it('shows the health note, version and a way back', () => {
