@@ -8,6 +8,8 @@ export interface SettingsMap {
   fitnessCheckIntervalWeeks: number
   /** Due date of the baseline fitness check booked at setup (YYYY-MM-DD). */
   baselineCheckDue: string
+  /** A half-finished first-launch setup, so it resumes after iOS closes the app. */
+  setupDraft: unknown
 }
 
 export type SettingKey = keyof SettingsMap

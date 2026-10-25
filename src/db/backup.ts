@@ -31,8 +31,11 @@ import {
 
 export const BACKUP_APP = 'daily-quest'
 
-/** Secrets stay on the device: never exported, and kept when importing. */
-export const DEVICE_ONLY_SETTINGS: readonly SettingKey[] = ['geminiKey']
+/** Settings that belong to this phone only: never exported or fingerprinted. */
+export const DEVICE_ONLY_SETTINGS: readonly SettingKey[] = ['geminiKey', 'setupDraft']
+
+/** Device-only settings an import keeps. A half-finished setup ends with the import. */
+const KEPT_ON_RESTORE: readonly SettingKey[] = ['geminiKey']
 
 export type BackupTables = { [K in TableName]: TableRows[K][] }
 
@@ -384,11 +387,19 @@ function validateTables(tables: unknown): BackupTables {
 /** Replaces everything with the backup. All or nothing: on any error, nothing changes. */
 export async function restoreBackup(backup: BackupFile): Promise<void> {
   await db.transaction('rw', db.tables, async () => {
-    const kept = (await db.settings.bulkGet([...DEVICE_ONLY_SETTINGS])).filter(
+    const kept = (await db.settings.bulkGet([...KEPT_ON_RESTORE])).filter(
       (row) => row !== undefined,
     )
     await Promise.all(db.tables.map((table) => table.clear()))
-    for (const name of TABLE_NAMES) await db.table(name).bulkAdd(backup.tables[name])
+    for (const name of TABLE_NAMES) {
+      const rows =
+        name === 'settings'
+          ? backup.tables.settings.filter(
+              (row) => !DEVICE_ONLY_SETTINGS.includes(row.key as SettingKey),
+            )
+          : backup.tables[name]
+      await db.table(name).bulkAdd(rows)
+    }
     await db.settings.bulkPut(kept)
   })
 }

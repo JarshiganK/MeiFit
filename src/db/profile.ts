@@ -67,6 +67,9 @@ export async function saveSetup(result: SetupResult, options: SaveSetupOptions):
       if (options.baselineCheckDue) {
         await db.settings.put({ key: 'baselineCheckDue', value: options.baselineCheckDue })
       }
+
+      // Setup is finished, so there's nothing left to resume.
+      await db.settings.delete('setupDraft')
     },
   )
 }

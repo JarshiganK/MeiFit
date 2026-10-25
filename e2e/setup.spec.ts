@@ -96,3 +96,35 @@ test('under-13s are stopped kindly at "About you"', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('made for ages 13 and up')
   await heading(page, 'About you')
 })
+
+test('a reload mid-setup resumes at the same step with the answers kept', async ({ page }) => {
+  await page.goto('/setup')
+  await page.getByRole('button', { name: 'Skip intro' }).click()
+  await page.getByRole('button', { name: 'Continue in the browser' }).click()
+  await page.getByLabel('Nickname').fill('Sam')
+  await page.getByText('Female', { exact: true }).click()
+  await page.getByLabel('Date of birth').fill('2001-01-15')
+  await page.getByLabel('Height (cm)').fill('160')
+  await page.getByLabel('Current weight (kg)').fill('58')
+  await page.getByText('Light', { exact: true }).click()
+  await next(page)
+  await heading(page, 'Your goal')
+  await page.getByText('Maintain', { exact: true }).click()
+  await next(page)
+  await heading(page, 'Your routine')
+
+  await page.reload()
+  await heading(page, 'Your routine')
+  await expect(page.getByText('Step 4 of 7')).toBeVisible()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page.getByRole('radio', { name: /^Maintain/ })).toBeChecked()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page.getByLabel('Nickname')).toHaveValue('Sam')
+
+  // Finishing clears the saved draft.
+  for (let i = 0; i < 5; i++) await next(page)
+  await page.getByRole('button', { name: 'Start my quests' }).click()
+  await heading(page, 'Status')
+  const settings = (await idbAll(page, 'settings')) as { key: string }[]
+  expect(settings.map((row) => row.key)).not.toContain('setupDraft')
+})

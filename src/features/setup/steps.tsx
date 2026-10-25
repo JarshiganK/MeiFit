@@ -5,7 +5,7 @@ import { ageBand, type FieldError } from '../../domain/setup'
 import type { ActivityLevel, Goal, Pace, Sex } from '../../domain/targets'
 import { Button, Card, ChoiceCards, IconButton, NumberStepper, TextField } from '../../ui'
 import { ImportBackup } from '../settings/ImportBackup'
-import type { Draft } from './draft'
+import type { Draft, ExamDraft } from './draft'
 
 export interface StepProps {
   draft: Draft
@@ -309,11 +309,6 @@ export function FoodStep({
 }
 
 // ------------------------------------------------------------------ exams
-
-export interface ExamDraft {
-  title: string
-  date: string
-}
 
 export function ExamsStep({
   exams,

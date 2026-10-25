@@ -8,6 +8,7 @@ import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
 import { db } from '../../db/db'
 import { currentTarget, getProfile, latestWeighIn, saveSetup } from '../../db/profile'
+import { getSetting, setSetting } from '../../db/settings'
 import { requestPersistentStorage } from '../../db/storage'
 import type { BodyLog, Profile, TargetHistory } from '../../db/types'
 import { toLocalDate } from '../../domain/date'
@@ -23,7 +24,15 @@ import {
 } from '../../domain/setup'
 import { roundKcal, validateTargetEdits } from '../../domain/targets'
 import { Button, IconButton, Stepper, iconButtonClass, useToast } from '../../ui'
-import { EMPTY_DRAFT, draftFromProfile, draftToAnswers, type Draft } from './draft'
+import {
+  EMPTY_DRAFT,
+  draftFromProfile,
+  draftToAnswers,
+  parseSavedSetup,
+  type Draft,
+  type ExamDraft,
+  type SavedSetup,
+} from './draft'
 import { ReviewStep, type TargetEdits } from './ReviewStep'
 import {
   AboutStep,
@@ -33,7 +42,6 @@ import {
   InstallStep,
   IntroStep,
   RoutineStep,
-  type ExamDraft,
 } from './steps'
 
 type StepId =
@@ -69,6 +77,8 @@ interface Loaded {
   weighIn: BodyLog | null
   target: TargetHistory | null
   foodCount: number
+  /** A first-launch setup left part-way, to resume. */
+  saved: SavedSetup | null
 }
 
 /** Read from event handlers only (the purity rule can't tell they aren't render code). */
@@ -90,6 +100,7 @@ export function SetupFlow() {
       weighIn: (await latestWeighIn()) ?? null,
       target: profile ? ((await currentTarget(todayLocal())) ?? null) : null,
       foodCount: await db.foods.count(),
+      saved: profile ? null : parseSavedSetup(await getSetting('setupDraft', null)),
     }
   }, [])
 
@@ -105,14 +116,24 @@ function SetupWizard({ changing, initial }: { changing: boolean; initial: Loaded
   const [today] = useState(todayLocal)
   const [standalone] = useState(isStandalone)
   const steps = changing ? CHANGE : FIRST_RUN
-  const [index, setIndex] = useState(0)
-  const [draft, setDraft] = useState<Draft>(() =>
-    initial.profile ? draftFromProfile(initial.profile, initial.weighIn?.weightKg) : EMPTY_DRAFT,
+  const saved = changing ? null : initial.saved
+  const [index, setIndex] = useState(() =>
+    Math.max(0, saved ? steps.indexOf(saved.step as StepId) : 0),
   )
-  const [loadStarterMenu, setLoadStarterMenu] = useState(true)
-  const [exams, setExams] = useState<ExamDraft[]>([])
-  const [baselineDate, setBaselineDate] = useState(() => defaultBaselineDate(today))
-  const [edits, setEdits] = useState<TargetEdits | null>(null)
+  const [draft, setDraft] = useState<Draft>(() =>
+    initial.profile
+      ? draftFromProfile(initial.profile, initial.weighIn?.weightKg)
+      : (saved?.draft ?? EMPTY_DRAFT),
+  )
+  const [loadStarterMenu, setLoadStarterMenu] = useState(saved?.loadStarterMenu ?? true)
+  const [exams, setExams] = useState<ExamDraft[]>(saved?.exams ?? [])
+  const [baselineDate, setBaselineDate] = useState(() => {
+    // A booking saved days ago may have fallen out of the 7-day window.
+    const range = baselineDateRange(today)
+    const kept = saved?.baselineDate
+    return kept && kept >= range.min && kept <= range.max ? kept : defaultBaselineDate(today)
+  })
+  const [edits, setEdits] = useState<TargetEdits | null>(saved?.edits ?? null)
   const [showErrors, setShowErrors] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
@@ -147,6 +168,18 @@ function SetupWizard({ changing, initial }: { changing: boolean; initial: Loaded
     setShowErrors(false)
     setIndex(next)
     window.scrollTo(0, 0)
+    if (!changing) {
+      // Saved after each step, so a relaunch picks up here (iOS may close the app).
+      const resume: SavedSetup = {
+        step: steps[next] ?? 'review',
+        draft,
+        loadStarterMenu,
+        exams,
+        baselineDate,
+        edits,
+      }
+      void setSetting('setupDraft', resume)
+    }
   }
 
   const finish = async () => {

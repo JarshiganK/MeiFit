@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -10,7 +10,7 @@ import { createBackup, deleteAllData, serializeBackup } from '../../db/backup'
 import { db } from '../../db/db'
 import { currentTarget, getProfile } from '../../db/profile'
 import { STARTER_MENU } from '../../db/seed/starterMenu'
-import { getSetting } from '../../db/settings'
+import { getSetting, setSetting } from '../../db/settings'
 import { TABLE_NAMES } from '../../db/schema'
 import { sampleTables } from '../../test/fixtures'
 import { ToastProvider } from '../../ui'
@@ -117,6 +117,41 @@ describe('first-launch setup', () => {
     expect(await db.foods.count()).toBe(STARTER_MENU.length)
     expect(await db.events.count()).toBe(1)
     expect(await getSetting('baselineCheckDue', '')).toBe('2026-10-31')
+    // Finished, so nothing is left to resume.
+    expect(await getSetting('setupDraft', null)).toBeNull()
+  })
+
+  it('picks up where it left off after the app is closed mid-setup', async () => {
+    renderAt('/setup')
+    await reachAboutStep()
+    await fillAboutYou()
+    await next()
+    await userEvent.click(await screen.findByRole('radio', { name: /^Lose fat/ }))
+    await next()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Your routine' })).toBeVisible()
+    await waitFor(async () =>
+      expect(await getSetting('setupDraft', null)).toMatchObject({ step: 'routine' }),
+    )
+
+    // iOS closes the app; it opens again from the Home Screen.
+    cleanup()
+    renderAt('/')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Your routine' })).toBeVisible()
+    expect(screen.getByText('Step 4 of 7')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(await screen.findByRole('radio', { name: /^Lose fat/ })).toBeChecked()
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(await screen.findByLabelText('Nickname')).toHaveValue('Sam')
+    expect(screen.getByLabelText('Current weight (kg)')).toHaveValue('69')
+  })
+
+  it('starts afresh when the saved setup is unreadable', async () => {
+    await setSetting('setupDraft', { step: 'review', draft: { nickname: 7 } })
+    renderAt('/setup')
+    expect(
+      await screen.findByRole('heading', { level: 1, name: en.setup.intro[0]?.title }),
+    ).toBeVisible()
   })
 
   it('shows what is missing instead of moving on', async () => {

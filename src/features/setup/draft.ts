@@ -1,6 +1,19 @@
 import { DEFAULT_ROUTINE, type SetupAnswers } from '../../domain/setup'
 import type { ActivityLevel, Goal, Pace, Sex } from '../../domain/targets'
 import type { Profile } from '../../db/types'
+import {
+  arrayOf,
+  bool,
+  isRecord,
+  nullable,
+  num,
+  oneOf,
+  optional,
+  positive,
+  shape,
+  text,
+  type Check,
+} from '../../db/validate'
 
 /** What the setup form holds while it's being filled in. Typed fields stay as text. */
 export interface Draft {
@@ -89,4 +102,55 @@ export function draftFromProfile(profile: Profile, weightKg: number | undefined)
     studyGoalHours: profile.studyGoalHours,
     blockMin: profile.blockMin,
   }
+}
+
+export interface ExamDraft {
+  title: string
+  date: string
+}
+
+/**
+ * A half-finished first-launch setup, saved after each step so it resumes
+ * after iOS closes the app. It stays on this phone and is never backed up.
+ */
+export interface SavedSetup {
+  step: string
+  draft: Draft
+  loadStarterMenu: boolean
+  exams: ExamDraft[]
+  baselineDate: string
+  edits: { kcal: number; proteinG: number } | null
+}
+
+const draftShape: Check = shape({
+  nickname: text,
+  sex: optional(oneOf('male', 'female', 'other')),
+  birthDate: text,
+  height: text,
+  weight: text,
+  activityLevel: optional(oneOf('sedentary', 'light', 'moderate', 'very')),
+  goal: optional(oneOf('lose', 'maintain', 'gain')),
+  pace: oneOf('slow', 'standard'),
+  goalWeight: text,
+  goalWaist: text,
+  workoutsPerWeek: num,
+  flexDaysPerWeek: num,
+  sleepHours: num,
+  studyGoalHours: num,
+  blockMin: num,
+})
+
+const savedShape: Check = shape({
+  step: text,
+  draft: draftShape,
+  loadStarterMenu: bool,
+  exams: arrayOf(shape({ title: text, date: text })),
+  baselineDate: text,
+  edits: nullable(shape({ kcal: positive, proteinG: positive })),
+})
+
+/** The saved setup, or null if there's none or it doesn't look right (e.g. an older app version). */
+export function parseSavedSetup(value: unknown): SavedSetup | null {
+  if (!isRecord(value) || !savedShape(value)) return null
+  return value as unknown as SavedSetup
 }

@@ -76,6 +76,13 @@ describe('createBackup', () => {
     expect(text).not.toContain('geminiKey')
   })
 
+  it('never includes a half-finished setup', async () => {
+    await seed()
+    await setSetting('setupDraft', { step: 'goal' })
+    const text = serializeBackup(await createBackup(NOW))
+    expect(text).not.toContain('setupDraft')
+  })
+
   it('names the file after the local export date', async () => {
     expect(backupFileName(await createBackup(NOW))).toBe('daily-quest-backup-2026-10-25.json')
   })
@@ -109,6 +116,15 @@ describe('backup round trip', () => {
     await restoreBackup(parseBackup(text))
     expect(await getSetting('geminiKey', '')).toBe('device-key')
     expect(await getSetting('debug', false)).toBe(true)
+  })
+
+  it('ends a half-finished setup, even if the file somehow carries one', async () => {
+    await seed()
+    const backup = await createBackup(NOW)
+    backup.tables.settings.push({ key: 'setupDraft', value: { step: 'about' } })
+    await setSetting('setupDraft', { step: 'goal' })
+    await restoreBackup(parseBackup(serializeBackup(backup)))
+    expect(await getSetting('setupDraft', null)).toBeNull()
   })
 })
 
@@ -312,6 +328,7 @@ describe('backup status', () => {
     await seedWithoutExports()
     await prepareExport(NOW)
     await setSetting('geminiKey', 'new-key')
+    await setSetting('setupDraft', { step: 'goal' })
     expect((await getBackupStatus()).needsBackup).toBe(false)
   })
 
