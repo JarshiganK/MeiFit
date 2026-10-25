@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom/vitest'
+import 'fake-indexeddb/auto'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
+import { db } from '../db/db'
+
+// Every test starts with an empty database.
+afterEach(async () => {
+  await Promise.all(db.tables.map((table) => table.clear()))
+})
 
 // Node-environment tests (tests/*.test.ts) share this file; browser shims apply only in jsdom.
 if (typeof window !== 'undefined') {
