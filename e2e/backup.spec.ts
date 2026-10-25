@@ -1,47 +1,6 @@
 import { readFile } from 'node:fs/promises'
-import { expect, test, type Page } from '@playwright/test'
-
-/** Reads every row of an object store straight from IndexedDB. */
-function idbAll(page: Page, store: string): Promise<unknown[]> {
-  return page.evaluate(
-    (name) =>
-      new Promise<unknown[]>((resolve, reject) => {
-        const open = indexedDB.open('daily-quest')
-        open.onerror = () => reject(open.error ?? new Error('open failed'))
-        open.onsuccess = () => {
-          const db = open.result
-          const request = db.transaction(name, 'readonly').objectStore(name).getAll()
-          request.onsuccess = () => {
-            resolve(request.result)
-            db.close()
-          }
-          request.onerror = () => reject(request.error ?? new Error('read failed'))
-        }
-      }),
-    store,
-  )
-}
-
-function idbPut(page: Page, store: string, value: unknown): Promise<void> {
-  return page.evaluate(
-    ([name, row]) =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('daily-quest')
-        open.onerror = () => reject(open.error ?? new Error('open failed'))
-        open.onsuccess = () => {
-          const db = open.result
-          const tx = db.transaction(name, 'readwrite')
-          tx.objectStore(name).put(row)
-          tx.oncomplete = () => {
-            db.close()
-            resolve()
-          }
-          tx.onerror = () => reject(tx.error ?? new Error('write failed'))
-        }
-      }),
-    [store, value] as const,
-  )
-}
+import { expect, test } from '@playwright/test'
+import { idbAll, idbPut, seedProfile } from './helpers'
 
 const WEIGH_IN = { id: 1, date: '2026-10-25', at: 1_761_360_000_000, weightKg: 69 }
 
@@ -50,6 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'canShare', { value: undefined, configurable: true })
   })
+  await seedProfile(page)
 })
 
 test('data survives a reload, and export → delete all → import restores it', async ({ page }) => {
@@ -81,18 +41,22 @@ test('data survives a reload, and export → delete all → import restores it',
   await expect(deleteButton).toBeDisabled()
   await page.getByLabel('Type DELETE to confirm').fill('DELETE')
   await deleteButton.click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Status' })).toBeVisible()
+  // With no profile left, the app goes back to first-launch setup.
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Your day is a quest board' }),
+  ).toBeVisible()
   await expect(page.getByText('All data deleted.')).toBeVisible()
   expect(await idbAll(page, 'bodyLogs')).toEqual([])
   expect(await idbAll(page, 'exportLogs')).toEqual([])
 
-  // Import
-  await page.goto('/settings')
+  // Import, as on a new phone: from setup's install step
+  await page.getByRole('button', { name: 'Skip intro' }).click()
   await page.getByTestId('backup-file-input').setInputFiles(file)
   const sheet = page.getByRole('dialog', { name: 'Restore this backup?' })
   await expect(sheet.getByText('1 weigh-ins')).toBeVisible()
   await sheet.getByRole('button', { name: 'Replace my data' }).click()
-  await expect(page.getByText('Backup restored.')).toBeVisible()
+  await expect(page.getByText('Backup restored. Welcome back!')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Status' })).toBeVisible()
   expect(await idbAll(page, 'bodyLogs')).toEqual([WEIGH_IN])
   expect(await idbAll(page, 'exportLogs')).toHaveLength(1)
 })

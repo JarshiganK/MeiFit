@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { CONTENT_SECURITY_POLICY } from '../config/headers'
-import { SCREENS, recordCspViolations } from './helpers'
+import { SCREENS, recordCspViolations, seedProfile } from './helpers'
+
+// Screens sit behind first-launch setup, so every test starts with a profile.
+test.beforeEach(async ({ page }) => {
+  await seedProfile(page)
+})
 
 test('the preview build sends the production security headers', async ({ request }) => {
   const page = await request.get('/')

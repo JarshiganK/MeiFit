@@ -104,3 +104,46 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **App tests now wait for lazy screens** (`findBy…` for the first lookup after a render or navigation). The assertions are unchanged.
 - **A `TextField` primitive** joins the design system (label, hint, error, 16 px input). Setup will reuse it.
 - **Testing Library's async timeout is 3 s** (was 1 s). Under a full parallel coverage run, the first fake-IndexedDB read in a worker sometimes took over a second and a `findBy` timed out, although the screen had rendered. The assertions are unchanged.
+
+## 2026-10-25: Item 2 fix (back up before replace or delete)
+
+- **Owner request:** the import review sheet and the Delete all data page show when the last backup was made. When there's no backup or data has changed since, "Back up first" is the primary button (it runs the normal export) and Replace or Delete becomes the secondary action.
+- **"Changed since the last backup"** is a fingerprint (a fast 53-bit cyrb53 hash) of everything a backup holds except the export log and device-only settings. Each export saves the fingerprint in its `exportLogs` row. It isn't indexed, so no schema version was needed, and the validator accepts it as optional. Same data gives the same fingerprint, so a restored phone counts as backed up. Alternatives: per-row "updated at" stamps on every table (a schema change, and deletes are hard to track), or a crypto hash (async and unnecessary here).
+- **Export entries made before this change have no fingerprint** and count as "changed", which errs towards backing up.
+- **A phone with no data needs no backup** (settings alone don't count), so restoring onto a new phone makes Replace the primary action.
+- **While the status loads, the screens assume a backup is needed** (the safe default).
+- **`prepareExport` replaces `recordExport` and `lastExport`.** It logs the export (with fingerprint) and builds the file in one transaction.
+- **`Button` renders `data-variant`,** so tests can assert which action is primary.
+- **The Phase 1 item 2 test "offers an export first"** was replaced by tests for both states. Its button label ("Export a backup first") was renamed by this change to "Back up first" / "Back up again".
+
+## 2026-10-25: Phase 1 item 3 (first-launch setup and targets)
+
+- **Targets** (`src/domain/targets.ts`):
+  - BMR, maintenance and the calorie target are computed unrounded and stored as whole numbers. The plan §15 case stores 2,021 and shows "≈2,020 (1,970–2,070)".
+  - The floor is the higher of BMR and 1,500 (male), 1,200 (female) or 1,350 (other, owner answer C).
+  - The target is clamped to the floor, and the review says so when that happens.
+- **Protein:** 1.8 g/kg of body weight. When BMI is 30 or more, the goal weight is used instead, or the weight at BMI 25 if there's no goal weight. Manual edits can't go below 1.6 g/kg (rounded up).
+- **Under 18** (owner answer B):
+  - Calories stay at maintenance for every goal, and "Lose fat" isn't offered.
+  - Flex days are hidden and saved as 0.
+  - The review shows protein and the plate rule but no calorie numbers. Setup explains why and suggests talking to a doctor or parent.
+  - Kcal is still stored, at maintenance, for internal use. The dinner quest rule ("always two proteins") lands with item 11.
+- **Under 13:** "About you" won't continue and explains that the app is for ages 13 and up.
+- **Setup flow:** three intro screens, then the seven steps of plan §2.
+  - The install step recommends adding to the Home Screen. "Continue in the browser" is a secondary button, because installing is the recommended path.
+  - Continuing asks the browser for persistent storage.
+  - "Restore a backup" on the install step covers moving to a new phone (same review and safety steps as Settings).
+- **Starter menu:** loaded only if the menu is empty, so it's never added twice. The generic rice and curry plate is three items (small, normal, large), because plan §18 gives each size its own calories and protein. Each counts as one protein item.
+- **Baseline fitness check:** defaults to the next Saturday (1–7 days ahead) and can be booked from today to 7 days ahead. It's stored as the `baselineCheckDue` setting; the check itself is Phase 2.
+- **No profile means setup.** The profile gate is lazy-loaded with the database, so Dexie stays out of the initial bundle. Delete all data now lands on setup, as approved.
+- **Changing answers** (Settings → Profile → Change answers) reruns the about, goal and routine steps plus the review, prefilled. It keeps the first setup date (the protein calibration counts from it) and any calibrated protein threshold. It adds a target row starting today, or replaces today's row, so earlier days keep their targets. It records a weigh-in only if the weight was changed, and it keeps the booked baseline date.
+- **Answers are kept in memory during setup.** A 2-minute flow restarting after iOS closes the app is acceptable; storing a half-finished profile would add cleanup paths.
+- **Validation:** pressing Next with errors moves focus to the first problem field.
+- **`ImportBackup` was extracted from `DataCard`,** so setup and Settings share one import flow.
+- **New UI primitive `ChoiceCards`** (large radio cards with a hint) and **`formatNumber`** (fixed English number format, e.g. "2,020").
+- **e2e tests now seed a profile** straight into IndexedDB (`seedProfile`), because every screen sits behind setup. The setup e2e test walks the real flow with axe on every step, in both themes. It has a 2-minute limit because ten axe scans exceed 30 s on WebKit; its assertions aren't affected.
+- **Test changes, explained:**
+  - The Delete all data tests now expect to land on setup rather than Status (approved default, now real).
+  - The "Replace on an empty phone" test moved from Settings to setup's install step, because a phone with no data can't reach Settings.
+  - One expected value in my new BMR tests was my own arithmetic slip (1,626.25 × 1.2 = 1,951.5, which rounds to 1,952), corrected before the code changed.
+- **Initial JS is 113.0 KB gzipped** (was 106.7 KB). The setup copy lives in the shared `en.ts`, and the shell imports primitives through `src/ui/index.ts`. Still about 87 KB under budget. If headroom gets tight, splitting `en.ts` per feature is the first lever.

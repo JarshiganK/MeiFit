@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { waitForServiceWorker } from './helpers'
+import { waitForServiceWorker, seedProfile } from './helpers'
+
+// Screens sit behind first-launch setup, so every test starts with a profile.
+test.beforeEach(async ({ page }) => {
+  await seedProfile(page)
+})
 
 test('reloads and navigates offline once the service worker is installed', async ({
   page,

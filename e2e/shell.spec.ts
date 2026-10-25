@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { SCREENS } from './helpers'
+import { SCREENS, seedProfile } from './helpers'
+
+// Screens sit behind first-launch setup, so every test starts with a profile.
+test.beforeEach(async ({ page }) => {
+  await seedProfile(page)
+})
 
 test('opens on Status and moves between every tab', async ({ page }) => {
   await page.goto('/')
