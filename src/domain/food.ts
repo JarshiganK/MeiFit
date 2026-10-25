@@ -226,3 +226,66 @@ export function validateFood(
   }
   return errors
 }
+
+// ---------------------------------------------------------------- combos, drinks, custom
+
+/** `foodId` of a one-off custom entry that isn't on the menu. */
+export const CUSTOM_FOOD_ID = 0
+
+/** A custom entry (outside food with estimated values), logged at one serving. */
+export function customItem(
+  name: string,
+  kcal: number,
+  proteinG: number,
+  countsAsProtein: boolean,
+): MealItem {
+  return {
+    foodId: CUSTOM_FOOD_ID,
+    name: name.trim(),
+    portion: 1,
+    kcal: Math.round(kcal),
+    proteinG: round1(proteinG),
+    countsAsProtein,
+  }
+}
+
+/**
+ * A combo's items priced from the menu as it is now. Items whose food no
+ * longer exists are skipped, so an old combo still logs what it can.
+ */
+export function comboItems(
+  combo: { items: readonly { foodId: number; portion: number }[] },
+  foods: readonly FoodValues[],
+): MealItem[] {
+  return combo.items.flatMap(({ foodId, portion }) => {
+    const food = foods.find((f) => f.id === foodId)
+    return food ? [mealItem({ ...food, id: foodId }, portion)] : []
+  })
+}
+
+/**
+ * The drink the +1 button logs (owner change 3): the most-logged drink, the
+ * most recent one on a tie, or the first drink on the menu when none has
+ * been logged yet.
+ */
+export function mostLoggedDrink(
+  drinkLogs: readonly { at: number; items: readonly MealItem[] }[],
+  drinkIds: readonly number[],
+): number | undefined {
+  const stats = new Map<number, { count: number; last: number }>()
+  for (const log of drinkLogs) {
+    for (const item of log.items) {
+      if (!drinkIds.includes(item.foodId)) continue
+      const seen = stats.get(item.foodId) ?? { count: 0, last: 0 }
+      stats.set(item.foodId, { count: seen.count + 1, last: Math.max(seen.last, log.at) })
+    }
+  }
+  let best: number | undefined
+  for (const [id, { count, last }] of stats) {
+    const current = best === undefined ? undefined : stats.get(best)
+    if (!current || count > current.count || (count === current.count && last > current.last)) {
+      best = id
+    }
+  }
+  return best ?? drinkIds[0]
+}

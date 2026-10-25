@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { atLocalTime, toLocalDate } from './date'
 import {
+  CUSTOM_FOOD_ID,
   CUP_PORTIONS,
+  comboItems,
+  customItem,
+  mostLoggedDrink,
   changePortion,
   dayTotals,
   defaultSlot,
@@ -208,5 +212,48 @@ describe('validateFood', () => {
     })
     // Zero calories (hidden for under-18s) skips that check.
     expect(validateFood({ ...good, kcal: 0, proteinG: 20 })).toEqual({})
+  })
+})
+
+describe('custom entries, combos and the +1 drink', () => {
+  it('logs a custom entry at one serving with no menu item', () => {
+    expect(customItem('  Kottu from the shop ', 950.4, 30.04, true)).toEqual({
+      foodId: CUSTOM_FOOD_ID,
+      name: 'Kottu from the shop',
+      portion: 1,
+      kcal: 950,
+      proteinG: 30,
+      countsAsProtein: true,
+    })
+  })
+
+  it('prices a combo from the menu and skips foods that are gone', () => {
+    const items = comboItems(
+      {
+        items: [
+          { foodId: 1, portion: 2 },
+          { foodId: 2, portion: 1 },
+          { foodId: 99, portion: 1 },
+        ],
+      },
+      [rice, chicken],
+    )
+    expect(items.map((i) => [i.name, i.kcal])).toEqual([
+      ['Rice', 400],
+      ['Chicken curry', 200],
+    ])
+  })
+
+  it('picks the most-logged drink, the latest on a tie, else the first on the menu', () => {
+    const log = (at: number, ...ids: number[]) => ({
+      at,
+      items: ids.map((id) => ({ ...mealItem(tea, 1), foodId: id })),
+    })
+    expect(mostLoggedDrink([log(1, 4), log(2, 5), log(3, 4)], [4, 5])).toBe(4)
+    expect(mostLoggedDrink([log(1, 4), log(5, 5)], [4, 5])).toBe(5)
+    // Only drinks still on the menu count.
+    expect(mostLoggedDrink([log(1, 7), log(2, 7)], [4, 5])).toBe(4)
+    expect(mostLoggedDrink([], [5, 4])).toBe(5)
+    expect(mostLoggedDrink([], [])).toBeUndefined()
   })
 })
