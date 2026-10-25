@@ -53,7 +53,7 @@ describe('app shell', () => {
     ['Food', 'Your menu is empty'],
     ['Train', 'Your training plan goes here'],
     ['Study', 'Focus blocks start here'],
-    ['Progress', 'Progress shows up over time'],
+    ['Progress', 'Weight'],
   ])('navigates to %s and shows its designed empty state', async (tab, emptyTitle) => {
     renderAt('/')
     await userEvent.click(screen.getByRole('link', { name: tab }))

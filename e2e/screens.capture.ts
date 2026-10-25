@@ -75,6 +75,29 @@ for (const theme of THEMES) {
     await page.getByRole('button', { name: /^Edit\s?Chicken curry/ }).click()
     await shot(page, `menu-edit-sheet-${theme}`)
 
+    // Progress with a few earlier weigh-ins plus today's.
+    await page.evaluate(async () => {
+      const db = await new Promise<IDBDatabase>((resolve) => {
+        const open = indexedDB.open('daily-quest')
+        open.onsuccess = () => resolve(open.result)
+      })
+      const tx = db.transaction('bodyLogs', 'readwrite')
+      const store = tx.objectStore('bodyLogs')
+      const day = 86_400_000
+      ;[70.6, 70.3, 70.4, 70.1, 69.9, 70, 69.7, 69.6, 69.4].forEach((kg, i) => {
+        const at = Date.now() - (24 - i * 2.5) * day
+        const date = new Date(at).toLocaleDateString('en-CA')
+        store.put({ id: 100 + i, date, at, weightKg: kg })
+      })
+      await new Promise((resolve) => (tx.oncomplete = resolve))
+      db.close()
+    })
+    await page.goto('/progress')
+    await page.getByLabel('Today’s weight (kg)').fill('69.2')
+    await page.getByRole('button', { name: 'Save' }).click()
+    await page.getByRole('button', { name: 'Dismiss' }).click()
+    await shot(page, `progress-weight-${theme}`, true)
+
     await page.goto('/dev/ui')
     await expect(page.getByRole('heading', { name: 'Design tokens' })).toBeVisible()
     await shot(page, `dev-ui-${theme}`, true)

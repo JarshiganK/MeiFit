@@ -1,13 +1,14 @@
-import { LineChart } from 'lucide-react'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { en } from '../../copy/en'
-import { EmptyState } from '../../ui'
+import { WeightCard } from './WeightCard'
 
 export function ProgressScreen() {
   return (
     <>
       <ScreenHeader title={en.progress.title} />
-      <EmptyState icon={LineChart} title={en.progress.emptyTitle} body={en.progress.emptyBody} />
+      <div className="flex flex-col gap-4 pt-2">
+        <WeightCard />
+      </div>
     </>
   )
 }
