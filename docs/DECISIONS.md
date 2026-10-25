@@ -188,3 +188,14 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
   - The user can adjust the number within that range before confirming. Confirming adds a `targetHistory` row from today with `reason: 'calibration'` (other targets carried over), so earlier days keep the calibration rule.
   - The proposal shows only when viewing today.
 - **Copy:** the drinks card is "Quick drinks", so it isn't confused with the menu's and the log's "Drinks" sections (three regions had the same name).
+
+## 2026-10-26: Phase 1 item 6 (two-tap sleep log)
+
+- **Where:** a Sleep card on Status (plan §10): "Going to sleep" at night, "I'm awake" in the morning. While a sleep is open the card shows "Sleeping since 23:10" with "I'm awake" and Cancel.
+- **The open sleep** is a single `openSleep` setting holding the bedtime (no schema change). "I'm awake" saves a `sleepLogs` row and clears the setting in one transaction. Undo on the "Good morning" toast deletes the log and reopens the sleep.
+- **Counted on the wake-up date** (plan §5), with full bedtime and wake-up instants and whole minutes.
+- **Forgotten wake tap (owner change 4):** if the open sleep is more than 16 hours old, "I'm awake" opens "When did you wake up?" with the bedtime and a suggested wake time (bedtime + sleep target), both editable.
+- **Editing:** the last sleep has Edit (both times, Delete with Undo). "Add a sleep" enters a night by hand; its default is the most recent night that has already ended (23:00 to 07:00), so it's never in the future. The check refuses a wake time before the bedtime, sleeps over 24 hours and wake times in the future. Edits and hand entries are saved as `source: 'manual'`.
+- **Several sleeps on one day:** the longest is the main sleep (`mainSleep`), as approved; the quest uses it in item 11.
+- **The target line** is neutral when a night was short ("Your target is 7 h"), never a judgement.
+- **e2e uses Playwright's clock** to cross midnight deterministically.
