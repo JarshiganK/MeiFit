@@ -15,24 +15,40 @@ Instructions for Claude Code when building **Daily Quest**. Read this file and `
 
 ## 2. How to work
 
-1. Start every session by reading `MASTER_PLAN.md`, this file, `docs/PROGRESS.md` and `docs/DECISIONS.md`.
-2. Build in the order of `MASTER_PLAN.md` section 13: Phase 0, then Phase 1 items 1–11.
+1. Start every session by reading:
+   - `MASTER_PLAN.md` and this file.
+   - `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/QUESTIONS.md` and `docs/USER-TASKS.md`.
+2. **You're working unattended.** Build every remaining feature in the order of `MASTER_PLAN.md` section 13:
+   1. The rest of Phase 1, up to item 11.
+   2. Phase 2: all the Must items first, then the Nice items.
+   3. Phase 3.
    - Ignore the week estimates.
-   - Don't start Phase 2 or 3 unless I ask.
+   - Ignore the gate that asks for a week of daily use before Phase 2. I've chosen to skip it.
 3. Build one feature at a time, in this sequence:
    1. Write a short plan: files, data changes and tests.
    2. Write tests for the domain logic first.
    3. Implement.
    4. Run `npm run check` and fix every failure.
-   5. Write the checkpoint report, then stop.
-4. "continue" means build the next feature. "continue up to item N" means build through item N, stopping early only if checks fail or a decision needs me.
-5. Ask me only when a choice changes scope, can't be undone, or needs my accounts (GitHub, Netlify, API keys).
-   - Otherwise, decide and keep going.
-   - Log each decision in `docs/DECISIONS.md`: date, decision, reason and alternatives.
-6. Keep `docs/PROGRESS.md` current. List every feature from `MASTER_PLAN.md` section 6 with its status (todo, in progress, done or deferred) and its main files.
-7. Never claim something works without running it.
+   5. Commit and push (section 9).
+   6. Save the checkpoint report to `docs/checkpoints/<item>.md` (section 11), then start the next feature straight away.
+4. At the end of each phase, also write `docs/checkpoints/phase-<n>.md` (section 11), then carry straight on to the next phase.
+5. **Never stop to ask me.** When something needs my decision:
+   1. Pick the safest option that's easy to undo.
+   2. Log it in `docs/DECISIONS.md` (date, decision, reason and alternatives).
+   3. Add it to `docs/QUESTIONS.md` so I can review it later.
+   4. Continue.
+6. **When a step needs my accounts or my phone,** do everything you can without me, then continue. This covers GitHub, Netlify, API keys, building an iPhone Shortcut, and checks that only work on an iPhone.
+   - Build the app side and test it with mocks.
+   - Write exactly what I need to do in `docs/USER-TASKS.md`, as numbered steps.
+7. **Stop the run only in three cases:**
+   1. `npm run check` still fails after genuine attempts to fix it.
+   2. You're not on the `develop` branch.
+   3. Every feature is done.
+   - Never skip, weaken or delete a test to get past a failure, and never commit failing code.
+8. Keep `docs/PROGRESS.md` current. List every feature from `MASTER_PLAN.md` section 6 with its status (todo, in progress, done, deferred or blocked) and its main files. Give a reason for anything deferred or blocked.
+9. Never claim something works without running it.
    - Some behaviour can only be checked on an iPhone, such as Shortcuts or Add to Home Screen.
-   - For that, say so plainly and give me numbered steps to test it.
+   - For that, say so plainly and put numbered test steps in the checkpoint report.
 
 ## 3. Commands
 
@@ -231,11 +247,17 @@ These requirements add to the plan:
 
 ## 9. Git rules (strict)
 
-- **No git writes.** Never run a git command that changes the repo or the remote: no add, commit, push, merge, rebase, reset, stash, tag, checkout, switch or branch creation.
-  - Read-only commands (status, diff, log) are fine.
-- **I make every commit myself.** In each checkpoint report, suggest a branch name and 2–5 commits. For each commit, give:
-  - A message that starts with a verb and is under 60 characters (plan section 14).
-  - The files it includes.
+- **Work only on `develop`.** If another branch is checked out, stop the run and tell me.
+- **Commit and push each feature.** After `npm run check` passes:
+  - Make 2–5 commits, one per logical piece.
+  - Each message starts with a verb and is under 60 characters (plan section 14).
+  - Then run `git push origin develop`.
+- **If a push fails** (network or credentials), keep committing locally, add the problem to `docs/USER-TASKS.md`, and push again after the next feature.
+- **Never touch `main`.** No checkout, merge or push to `main`.
+  - I merge `develop` into `main` myself after testing on my iPhone.
+  - Every push to `main` is a production deploy that costs Netlify credits.
+- **Never rewrite history.** No force-push, rebase, reset, amend, stash, tag, or deleting branches.
+  - Read-only commands (status, diff, log, show) are fine.
 - **No AI attribution.** Never add AI author, co-author or attribution text to code, commits or docs.
 - **No secrets in git.** Never put API keys or secrets in code, tests, fixtures or committed files.
   - `.gitignore` covers `.env*`, `coverage`, `playwright-report` and `test-results`.
@@ -248,13 +270,28 @@ These requirements add to the plan:
 - It works offline in the preview build.
 - Empty, error and reduced-motion states are handled.
 - `docs/PROGRESS.md` and `docs/DECISIONS.md` are updated.
+- It's committed and pushed to `develop` (section 9).
 
 ## 11. Checkpoint report
 
-End each feature with this report, then stop and wait:
+Save each feature's report to `docs/checkpoints/<item>.md`, then keep going:
 
 1. **What I built:** 2–4 plain sentences, plus the 3–5 files to read first to understand it, with a one-line reason for each.
 2. **Checks:** tests passed, domain coverage, bundle size and the axe result.
-3. **Try it on your iPhone:** numbered steps using the branch deploy.
-4. **Commits:** a suggested branch name, and each commit with its files.
-5. **Decisions and questions:** anything logged, and anything that needs my answer.
+3. **Try it on your iPhone:** numbered steps using the `develop` branch deploy.
+4. **Commits:** each commit you made, with its short hash and message.
+5. **Decisions, questions and tasks for me:** anything you logged.
+
+At the end of each phase, write `docs/checkpoints/phase-<n>.md`:
+
+1. A one-line summary of each feature, linking its report.
+2. The checks on the phase's final commit.
+3. One iPhone test script for the whole phase, in the order I'd naturally use the app.
+4. Every open question and user task from the phase.
+
+When every feature is done, stop and post the final summary in the chat. It covers:
+
+- What's built, deferred and blocked.
+- The final checks.
+- Where the phase reports are.
+- Everything in `docs/QUESTIONS.md` and `docs/USER-TASKS.md`.
