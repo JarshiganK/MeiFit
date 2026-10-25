@@ -6,9 +6,10 @@
  * Derived values (XP, levels, streaks, quest results…) are never stored.
  */
 import type { LocalDate } from '../domain/date'
+import type { FoodCategory, FoodUnit, MealItem, MealSlot } from '../domain/food'
 import type { ActivityLevel, Goal, Pace, Sex } from '../domain/targets'
 
-export type { ActivityLevel, Goal, Pace, Sex }
+export type { ActivityLevel, FoodCategory, FoodUnit, Goal, MealItem, MealSlot, Pace, Sex }
 
 /** Epoch milliseconds. */
 export type Instant = number
@@ -67,9 +68,6 @@ export interface SettingRow {
   value: unknown
 }
 
-export type FoodUnit = 'cups' | 'size' | 'count'
-export type FoodCategory = 'staple' | 'curry' | 'side' | 'drink' | 'snack' | 'outside' | 'plate'
-
 export interface Food {
   id?: number
   name: string
@@ -82,19 +80,6 @@ export interface Food {
   countsAsProtein: boolean
   /** Hidden from the menu but kept so old logs still make sense. */
   archived?: boolean
-}
-
-export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'drink'
-
-/** A logged item keeps the values it had when logged (plan §3). */
-export interface MealItem {
-  foodId: number
-  name: string
-  /** Multiplier: cups for rice, 0.75 / 1 / 1.5 for sizes, a count for pieces. */
-  portion: number
-  kcal: number
-  proteinG: number
-  countsAsProtein: boolean
 }
 
 export interface Meal {
