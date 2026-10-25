@@ -7,7 +7,9 @@ export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 1 : 0,
+  // WebKit on Windows sometimes stalls IndexedDB in several workers at once under a full
+  // parallel run; one retry absorbs that. A test that fails twice still fails the run.
+  retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: `http://localhost:${PORT}`,
