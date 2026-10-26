@@ -22,6 +22,7 @@ export async function loadQuestHistory(): Promise<QuestHistory | undefined> {
       db.fitnessChecks,
       db.examPeriods,
       db.exercises,
+      db.moodLogs,
     ],
     async () => {
       const profile = await db.profile.get('me')
@@ -45,6 +46,7 @@ export async function loadQuestHistory(): Promise<QuestHistory | undefined> {
         examPeriods: await db.examPeriods.toArray(),
         examPlan: await db.workoutPlans.where('kind').equals('exam').first(),
         exercises: await db.exercises.toArray(),
+        moods: await db.moodLogs.toArray(),
       }
     },
   )

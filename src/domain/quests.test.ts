@@ -399,3 +399,14 @@ describe('personal record XP (plan §7)', () => {
     expect(xpBreakdown(h, DAY).str).toBe(25)
   })
 })
+
+describe('mood check-in (plan §7)', () => {
+  it('earns 5 XP once a day, but not in exam mode', () => {
+    const h = history({
+      moods: [{ date: '2026-10-20' }, { date: '2026-10-21' }, { date: '2026-10-25' }],
+      examPeriods: [{ startsOn: '2026-10-25', endsOn: '2026-10-30' }],
+    })
+    expect(bonusXp(h, DAY)).toBe(10)
+    expect(bonusXp(history(), DAY)).toBe(0)
+  })
+})

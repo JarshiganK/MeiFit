@@ -43,6 +43,7 @@ export const QUEST_XP = {
   weighIns: 20,
   backup: 15,
   waist: 15,
+  mood: 5,
 } as const
 
 export const WEEKLY_WEIGH_INS = 3
@@ -100,6 +101,8 @@ export interface QuestHistory {
   examPlan: PlanShape | undefined
   /** Exercise types, to judge personal records. */
   exercises: readonly { id?: number | undefined; type: ExerciseType }[]
+  /** Mood check-ins (plan §6, §7), at most one a day. Optional for older callers. */
+  moods?: readonly { date: LocalDate }[]
 }
 
 function groupBy<T>(items: readonly T[], key: (item: T) => LocalDate): Map<LocalDate, T[]> {
@@ -404,7 +407,15 @@ function bonusBreakdown(
     vit += reward.vit
     str += reward.str
   })
-  return { vit, str, plain: waist * QUEST_XP.waist }
+  // Mood check-ins: +5 once a day, hidden (so no XP) in exam mode.
+  const moods = new Set(
+    (history.moods ?? [])
+      .map((m) => m.date)
+      .filter(
+        (d) => d >= history.profile.setupDate && d <= today && !isExamDay(d, history.examPeriods),
+      ),
+  ).size
+  return { vit, str, plain: waist * QUEST_XP.waist + moods * QUEST_XP.mood }
 }
 
 /**
