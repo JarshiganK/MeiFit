@@ -422,3 +422,16 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Errors are plain:** offline ("needs internet, log by tapping"), a failed request ("check your key and model name"), or no menu foods found.
 - **Privacy page and `PRIVACY.md`:** "coming in a later version" became "only works if you turn it on in Settings and add your own key". The mirror test keeps them identical.
 - **Testing:** the network is stubbed in component tests (URL, header, body, review and save); real requests need a key, so trying it is optional owner task 5.
+
+## 2026-10-26: Phase 3 item 4 (visual theme polish)
+
+- **New guard** (`e2e/layout.spec.ts`): every screen, with long names and a full plan loaded, has no horizontal scroll at 360 px and at 1024 px (CLAUDE.md §7), on WebKit and Chromium.
+- **Settings:** Menu now comes before Shortcut help (used more often), and the Shortcut help hint is shorter ("Reminders, alarms and photo import").
+- **The `/dev/ui` gallery** now shows the primitives added since Phase 0 (`TextField` with and without an error, `SelectField`, `ChoiceCards`), so both themes can be checked in one place.
+- **Earlier polish fixes,** made during each item's design review, are listed in their checkpoint reports:
+  - text sizes the theme didn't define (now guarded by a test);
+  - aligned ghost buttons;
+  - the Logged card above the menu;
+  - the weekly-average line kept out of the future;
+  - no duplicate Edit button on Train;
+  - steadier week strips.
