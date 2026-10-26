@@ -1,11 +1,11 @@
 import { en } from '../../copy/en'
-import { setFlexDay } from '../../db/days'
 import type { DayRecord, Meal, TargetHistory } from '../../db/types'
 import { hasAllMainMeals, type CalibrationStatus } from '../../domain/calibration'
 import type { LocalDate } from '../../domain/date'
-import { canMakeFlexDay, flexBudget, flexDaysInWeek } from '../../domain/flex'
+import { flexBudget } from '../../domain/flex'
 import { MAIN_MEALS, dayTotals, displayProtein } from '../../domain/food'
-import { Card, ProgressBar, Switch } from '../../ui'
+import { Card, ProgressBar } from '../../ui'
+import { FlexDaySwitch } from './FlexDaySwitch'
 import { approxKcal } from './format'
 
 export interface TotalsCardProps {
@@ -34,10 +34,7 @@ export function TotalsCard({
   const protein = displayProtein(totals.proteinG)
   const kcalLeft = target ? target.kcal - totals.kcal : 0
   const isFlex = day?.isFlexDay ?? false
-  const showFlex = !hideKcal && (flexPerWeek > 0 || isFlex)
   const flex = isFlex && target ? flexBudget(target.kcal, meals) : null
-  const flexUsed = flexDaysInWeek(date, week).length
-  const canFlex = isFlex || canMakeFlexDay(date, flexPerWeek, week)
   const mainMeals = MAIN_MEALS.filter((slot) => totals.bySlot[slot].itemCount > 0).length
   const threshold = target?.proteinQuestThresholdG ?? null
 
@@ -141,17 +138,7 @@ export function TotalsCard({
           )}
         </div>
 
-        {showFlex &&
-          (canFlex ? (
-            <Switch
-              label={en.food.flexDay}
-              hint={en.food.flexHint(flexUsed, flexPerWeek)}
-              checked={isFlex}
-              onChange={(on) => void setFlexDay(date, on)}
-            />
-          ) : (
-            <p className="text-sm text-muted">{en.food.flexUsedUp(flexPerWeek)}</p>
-          ))}
+        <FlexDaySwitch date={date} perWeek={flexPerWeek} day={day} week={week} hidden={hideKcal} />
 
         <p className="text-sm text-muted">{hideKcal ? en.food.plateRule : en.food.estimateNote}</p>
       </div>

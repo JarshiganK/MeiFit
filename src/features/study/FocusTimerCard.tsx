@@ -107,7 +107,7 @@ export function FocusTimerCard({ timer, blockMin, subjects }: FocusTimerCardProp
           <p
             role="timer"
             aria-live="off"
-            className="font-display text-6xl font-bold tabular-nums text-int"
+            className="font-display text-display font-bold tabular-nums text-int"
           >
             {formatCountdown(status.remainingMs)}
           </p>

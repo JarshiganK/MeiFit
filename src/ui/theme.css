@@ -74,6 +74,10 @@
   --animate-fade-in: fade-in var(--dur-base) var(--ease-out) both;
   --animate-sheet-in: sheet-in var(--dur-slow) var(--ease-out) both;
   --animate-toast-in: toast-in var(--dur-base) var(--ease-out) both;
+  /* A quest completing: a quick pop of its check mark. */
+  --animate-pop: pop var(--dur-slow) var(--ease-out) both;
+  /* The level-up moment: at most 1.5 s, and skippable. */
+  --animate-level-up: level-up var(--dur-celebrate) var(--ease-out) both;
 
   @keyframes fade-in {
     from {
@@ -89,6 +93,29 @@
     from {
       opacity: 0;
       transform: translateY(0.5rem);
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.6);
+    }
+    60% {
+      transform: scale(1.15);
+    }
+  }
+  @keyframes level-up {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    30% {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+    50%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }
