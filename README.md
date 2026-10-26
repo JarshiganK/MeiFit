@@ -2,7 +2,17 @@
 
 A calm, offline "life RPG" for your phone. Daily quests for food, training, sleep and study earn XP and levels. It's an installable web app (PWA): no account, no server, and all data stays on the device. Nothing about the user is built in; targets come from a short first-launch setup.
 
-`MASTER_PLAN.md` describes the product, and `CLAUDE.md` the engineering rules. Progress is tracked in `docs/PROGRESS.md` and decisions in `docs/DECISIONS.md`.
+`MASTER_PLAN.md` describes the product, and `CLAUDE.md` the engineering rules. Progress is tracked in `docs/PROGRESS.md`, decisions in `docs/DECISIONS.md`, and each feature's checkpoint report is in `docs/checkpoints/`.
+
+## What it does
+
+- **Setup:** a two-minute first launch that calculates calorie and protein targets (with a calorie floor and safe rules for under-18s), books a baseline fitness check and can load a Sri Lankan hostel starter menu.
+- **Status:** level, rank, STR/VIT/INT stats, streak and shields, today's seven quests, this week's quests and boss, the two-tap sleep log, a mood check-in, quick drinks, the flex-day switch and the Import button.
+- **Food:** two-tap logging (rice in cups, sizes, counts), combos, quick drinks, "something else", ≈ totals, a protein bar, the flex-dinner budget and the 14-day protein calibration. Optional photo recognition with the user's own Gemini key.
+- **Train:** a plan builder (normal and exam plans), one-tap set logging pre-filled from last time, a rest timer, personal records, step-up suggestions and missed-workout rescheduling.
+- **Study:** a focus timer that keeps time from its start, study blocks, hand entries, hours per subject, and the exam calendar with exam mode.
+- **Progress:** the weekly report and boss, weight with a weekly-average chart, waist, fitness checks, personal records, steps and achievements.
+- **Settings:** profile, menu editor, Shortcut help (reminders, Meal Snap, Health Sync), backups, Gemini, fitness check interval, theme, privacy, delete all data, debug console and version.
 
 ## Requirements
 
@@ -32,7 +42,7 @@ src/
               never reads the clock: "now" and the time zone are inputs.
   db/         Dexie schema and versions, repositories, backup export and import.
   features/   One folder per area: setup, status, food, train, study, progress,
-              fitness-check, settings.
+              fitness, import, settings.
   ui/         Design system: tokens (theme.css) and primitives (Button, Card, Sheet…).
   app/        Shell, routing, theme, update prompt, debug console.
   copy/en.ts  Every user-facing string.

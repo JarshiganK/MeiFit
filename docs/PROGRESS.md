@@ -87,6 +87,10 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 4. Visual theme polish: **done** (`e2e/layout.spec.ts`, design reviews in each checkpoint)
 5. Optional Teachable Machine model: **deferred** (see below)
 
+## Deferred
+
+- **Teachable Machine model (Phase 3, optional).** Deferred: it needs a model trained on photos of this canteen's food, which don't exist yet, and TensorFlow.js would add about 1 MB to the app. Meal Snap (Private Cloud Compute) and the Gemini backup already recognise meals from photos. Revisit once a few hundred labelled plate photos exist; the review screen would take its answers like the other two.
+
 ## Open TODOs
 
 - **LICENSE:** the owner will choose the licence. No LICENSE file until then.
