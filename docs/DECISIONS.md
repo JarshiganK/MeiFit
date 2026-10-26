@@ -356,3 +356,9 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - Notifications from Shortcuts open Shortcuts, not the app; the page says so.
 - **Setting up the automations can only be done on the iPhone:** listed as task 2 in `docs/USER-TASKS.md`.
 - **Test time limit, explained:** `e2e/train.spec.ts`'s axe test runs four scans and took about 29 s on WebKit even when passing, so it hit the 30 s limit once under load. It now has 90 s, like the setup test; its assertions are unchanged.
+
+## 2026-10-26: Phase 2 Nice 1 (mood check-in)
+
+- **Card on Status:** "How are you today?" with Energy 1–5 and Mood 1–5, one tap each. Each tap saves straight away; the part not yet picked starts at 3. One `moodLogs` row a day (unique date), and changing a value updates it.
+- **XP** (plan §7): +5 plain XP once a day for a check-in, worked out from the logs. In exam mode the card is hidden and no mood XP is given ("Waist and mood quests are hidden").
+- Mood isn't shown as a trend yet. The data is kept and backed up, ready for a later chart.
