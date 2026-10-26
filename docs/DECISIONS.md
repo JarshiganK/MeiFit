@@ -388,3 +388,20 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Rule:** a training day earlier this week (Monday to yesterday) counts as missed when its saved rules say training (planned sets > 0) and no set was done that day, unless a later day this week already ran that plan day. The plan in use on each day (normal or exam) gives the rule for days without a saved row.
 - **Prompt:** on a rest day with nothing logged yet, Train shows "You missed Thursday's workout. Do it today?" for the most recent missed day. "Do Thursday's workout" switches today to that plan day, the same as "Train anyway" (item 10), so it's saved with the date and judged by that day's sets.
 - It never moves past days and never nags on training days. Missing a workout has no penalty beyond the quest itself.
+
+## 2026-10-26: Phase 3 item 1 (import screen and the DQ1 format)
+
+- **Where:** an Import button (clipboard icon) in Status's header opens `/import` (plan §10). "Paste" reads the clipboard; Safari shows its own small Paste button to allow it, so importing is two taps (plan §11). If reading fails, a text box takes the pasted text and "Read" parses it.
+- **Parser** (`src/domain/importFormat.ts`):
+  - **Lines:** `DQ1;meal;<time>;<names>`, `DQ1;sleep;<bed>;<wake>` and `DQ1;steps;<date>;<count>`. The version and kind ignore case.
+  - **Times:** `YYYY-MM-DDTHH:mm`, optionally with seconds and an offset, as the Shortcuts "ISO 8601" date gives. Without an offset they're local time; impossible dates are refused.
+  - **Bad lines:** each is listed with its line number and a plain reason. Good lines still import.
+- **Meals** always open on a review card before saving (plan §11):
+  - the slot comes from the photo time, not the paste time;
+  - each name is fuzzy-matched to the menu (exact, contained, shared words or close spelling, threshold 0.6);
+  - unmatched names show "No match on your menu" and default to "Skip this one";
+  - every pick can be changed;
+  - matched items are logged at one serving (1 cup, Normal or × 1) as `source: 'import'` on the photo's date.
+- **Sleep and steps** replace what's logged for that date (plan §11). For sleep that means every sleep ending that day, so a manual nap that day is replaced too (the plan's "replaces the old entry"). Steps are one row per date.
+- **Steps** show on Progress (latest day and 7-day average) once there are any. They don't feed a quest; the plan has none.
+- **e2e** uses the text box, because automated browsers can't reliably grant clipboard reads. The Paste path is covered by component tests with a stubbed clipboard, and on the iPhone by hand.

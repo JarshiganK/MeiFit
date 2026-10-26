@@ -81,8 +81,8 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 
 ## Phase 3 build order
 
-1. Import screen and the `DQ1` parser: **next**
-2. Meal Snap and Health Sync shortcuts (help pages; the shortcuts are owner tasks)
+1. Import screen and the `DQ1` parser: **done** (`src/domain/importFormat.ts`, `src/features/import/ImportScreen.tsx`)
+2. Meal Snap and Health Sync shortcuts (help pages; the shortcuts are owner tasks): **next**
 3. Gemini backup (photo meal recognition with the user's own key)
 4. Visual theme polish
 5. Optional Teachable Machine model
