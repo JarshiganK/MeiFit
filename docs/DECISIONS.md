@@ -301,3 +301,20 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Stat levels** use the same curve as the overall level, on XP scaled so a typical week moves each stat about the same (plan §7). Typical weeks are set in `TYPICAL_WEEK_XP` (STR 190: 3 workouts and 4 rest days; VIT 420; INT 420: about 2 blocks a day). VIT is the reference, so STR counts about 2.2× and INT 1×. These constants are the place to tune after 2 weeks of real data (in `docs/QUESTIONS.md`).
 - **Ranks** by overall level, as in plan §7: E 1–9, D 10–19, C 20–34, B 35–49, A 50–69, S 70+. The card shows the rank and where the next one starts.
 - **Display:** the level card shows "Rank E", the next rank, total XP, and three stat columns. Each column has its icon, label, "Lv n" and a bar in the stat's colour; the bar's accessible name is "Strength Lv 1" (never colour alone).
+
+## 2026-10-26: Phase 2 Must 4 (exam calendar, exam mode, exam workout plan)
+
+- **Calendar:** Study has an "Exams and deadlines" card listing upcoming events (exam or deadline, date, optional subject), with add and delete (Undo). Setup's exam dates feed it too.
+- **Automatic periods** (plan §7): each exam gives a period from 14 days before it to the day after it; overlapping or touching periods merge. They are saved in `examPeriods` (`source: 'auto'`) and kept in step with the calendar whenever an event changes and when the app opens. Periods that have already ended are never rewritten (past days keep their rules); upcoming ones follow the calendar (deleting an exam removes its future period). Unchanged periods aren't rewritten, so opening the app doesn't make the data look changed for backups.
+- **Manual exam mode:** "Exam mode now" adds a period from today with an open end (`9999-12-31`). Switching it off removes it if it started today, or ends it yesterday, so today is back to normal.
+- **Effects** (plan §7):
+  - Study XP ×1.5: 45 per block, 225 a day, so a full day is 345.
+  - The exam workout plan replaces the normal one, if it has training days. Its days and planned sets are saved with each date like the normal plan's (item 9). With no exam plan, the normal plan stays in use.
+  - Diet and sleep quests are unchanged.
+  - The waist quest is hidden, and a waist measured in exam mode earns no quest XP.
+  - The fitness check shrinks to intro, body (weight and waist) and review.
+  - The weekly boss's workout target (2 in exam mode) lands with the weekly boss.
+- **Exam plan editing:** the plan editor has a Normal / Exam mode switch (`/train/plan?kind=exam`) with its own intro ("2–3 short sessions a week"). Train says when the exam plan is in use.
+- **Status** shows "Exam mode until …: study XP ×1.5" and labels the quest "Study blocks (×1.5)".
+- **Test change, explained:** the shared fixture's exam period (20 Nov – 5 Dec) didn't match its own exam (20 Nov, which gives 6 – 21 Nov). Opening the app now syncs periods with the calendar, so the inconsistent fixture made two "everything is backed up" tests see changed data. The fixture now has the period its exam implies.
+- **Mood quest** hiding in exam mode lands with the mood check-in (Phase 2 Nice).
