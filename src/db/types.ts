@@ -66,6 +66,13 @@ export interface DayRecord {
   date: LocalDate
   isFlexDay: boolean
   isPlannedRest: boolean
+  /**
+   * Sets planned for the day, saved with it like planned rest so later plan
+   * edits don't change how the day is judged. Not indexed (no schema change).
+   */
+  plannedSets?: number
+  /** The plan day trained, when it isn't the day's own weekday (e.g. training on a rest day). */
+  planWeekday?: number
 }
 
 export interface ExamPeriod {
@@ -136,6 +143,8 @@ export interface WorkoutSet {
   weightKg?: number
   seconds?: number
   done: boolean
+  /** When the set was ticked; sets close together form one session. Not indexed. */
+  loggedAt?: Instant
 }
 
 export interface FitnessCheck {

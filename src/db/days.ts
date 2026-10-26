@@ -3,7 +3,7 @@
  * past day is always judged by the rules it had.
  */
 import { weekDates, type LocalDate } from '../domain/date'
-import { isPlannedRest } from '../domain/workout'
+import { dayRule } from '../domain/workout'
 import { db } from './db'
 import type { DayRecord } from './types'
 
@@ -21,11 +21,11 @@ export async function daysInWeek(date: LocalDate): Promise<DayRecord[]> {
 export async function setFlexDay(date: LocalDate, isFlexDay: boolean): Promise<void> {
   await db.transaction('rw', db.days, db.workoutPlans, async () => {
     const day = await db.days.get(date)
-    const plan = day ? undefined : await db.workoutPlans.where('kind').equals('normal').first()
-    await db.days.put({
-      date,
-      isPlannedRest: day ? day.isPlannedRest : isPlannedRest(plan, date),
-      isFlexDay,
-    })
+    if (day) {
+      await db.days.put({ ...day, isFlexDay })
+      return
+    }
+    const plan = await db.workoutPlans.where('kind').equals('normal').first()
+    await db.days.put({ date, isFlexDay, ...dayRule(plan, date) })
   })
 }

@@ -92,6 +92,7 @@ describe('plan builder', () => {
       date: '2026-10-27',
       isFlexDay: true,
       isPlannedRest: false,
+      plannedSets: 0,
     })
     expect((await db.days.get('2026-10-20'))?.isPlannedRest).toBe(true)
   })
@@ -110,7 +111,7 @@ describe('recordPlannedRest (approved default)', () => {
     expect(await db.days.orderBy('date').toArray()).toEqual([
       { date: '2026-10-24', isFlexDay: true, isPlannedRest: true },
       { date: '2026-10-25', isFlexDay: false, isPlannedRest: true },
-      { date: '2026-10-26', isFlexDay: false, isPlannedRest: false },
+      { date: '2026-10-26', isFlexDay: false, isPlannedRest: false, plannedSets: 0 },
       { date: '2026-10-27', isFlexDay: false, isPlannedRest: true },
     ])
     await recordPlannedRest('2026-10-27')

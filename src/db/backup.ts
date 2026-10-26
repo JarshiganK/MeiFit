@@ -109,7 +109,13 @@ const ROW_CHECKS: Record<TableName, Check> = {
     proteinQuestThresholdG: nullable(positive),
     reason: oneOf('setup', 'fitness-check', 'manual', 'calibration'),
   }),
-  days: shape({ date, isFlexDay: bool, isPlannedRest: bool }),
+  days: shape({
+    date,
+    isFlexDay: bool,
+    isPlannedRest: bool,
+    plannedSets: optional(nonNegative),
+    planWeekday: optional(oneOf(1, 2, 3, 4, 5, 6, 7)),
+  }),
   examPeriods: shape({ id, startsOn: date, endsOn: date, source: oneOf('auto', 'manual') }),
   settings: shape({ key: nonEmptyText, value: defined }),
   foods: shape({
@@ -174,6 +180,7 @@ const ROW_CHECKS: Record<TableName, Check> = {
     weightKg: optional(nonNegative),
     seconds: optional(nonNegative),
     done: bool,
+    loggedAt: optional(instant),
   }),
   fitnessChecks: shape({
     id,

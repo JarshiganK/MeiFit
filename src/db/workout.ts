@@ -4,7 +4,7 @@
  */
 import { toLocalDate, type LocalDate } from '../domain/date'
 import {
-  isPlannedRest,
+  dayRule,
   restDaysToWrite,
   sortDays,
   type PlanKind,
@@ -63,8 +63,11 @@ async function changePlan(planId: number, change: (plan: WorkoutPlan) => Workout
     await db.workoutPlans.put(next)
     if (next.kind === 'normal') {
       const today = toLocalDate(Date.now())
-      if (await db.days.get(today)) {
-        await db.days.update(today, { isPlannedRest: isPlannedRest(next, today) })
+      const row = await db.days.get(today)
+      // A day already switched to another plan day keeps that choice.
+      if (row && row.planWeekday === undefined) {
+        const { isFlexDay, date } = row
+        await db.days.put({ date, isFlexDay, ...dayRule(next, today) })
       }
     }
   })
