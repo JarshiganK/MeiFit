@@ -9,14 +9,17 @@ import { allFoods, deleteMeal, drinkLogs, logFood } from '../../db/food'
 import { loadQuestHistory } from '../../db/history'
 import { getProfile } from '../../db/profile'
 import type { Food } from '../../db/types'
-import { ageOn, formatShortDate } from '../../domain/date'
+import { ageOn, formatShortDate, weekStart, weekday } from '../../domain/date'
 import { OPEN_END, periodOn } from '../../domain/exams'
 import { levelFor } from '../../domain/levels'
-import { indexHistory, questsForDay, weeklyQuests, xpBreakdown } from '../../domain/quests'
+import { indexHistory, questsForDay, weeklyQuests } from '../../domain/quests'
+import { bossFor, bossHistory, earnedTitles } from '../../domain/weekly'
+import { xpTotals } from '../../domain/xp'
 import { statLevels } from '../../domain/stats'
 import { streakFor } from '../../domain/streak'
 import { ADULT_AGE } from '../../domain/targets'
-import { Card, useToast } from '../../ui'
+import { Link } from 'react-router'
+import { Card, buttonClass, useToast } from '../../ui'
 import { FitnessBanner } from '../fitness/FitnessBanner'
 import { DrinkButtons } from '../food/DrinkButtons'
 import { FlexDaySwitch } from '../food/FlexDaySwitch'
@@ -47,13 +50,17 @@ export function StatusScreen() {
   if (data === null) return null
 
   const { history } = data
-  const breakdown = xpBreakdown(history, today)
+  const breakdown = xpTotals(history, today)
   const xp = breakdown.total
   const quests = questsForDay(indexHistory(history), today)
   const weekly = weeklyQuests(history, today)
   const isMinor = ageOn(history.profile.birthDate, today) < ADULT_AGE
   const { flexPerWeek } = data
   const examPeriod = periodOn(today, history.examPeriods)
+  // Monday: last week's boss result (plan §7).
+  const bosses = weekday(today) === 1 ? bossHistory(history, today) : []
+  const lastBoss = bosses.at(-1)
+  const lastTitle = earnedTitles(bosses).at(-1)
 
   const logDrink = async (drink: Food) => {
     const id = await logFood({ date: today, at: nowMs(), slot: 'drink', food: drink, portion: 1 })
@@ -68,6 +75,14 @@ export function StatusScreen() {
       <ScreenHeader title={en.status.title} />
       <div className="flex flex-col gap-4 pt-2">
         <FitnessBanner today={today} />
+        {lastBoss && (
+          <Card framed title={en.weekly.resultBanner}>
+            <p>{lastBoss.won ? en.weekly.bossWon(lastTitle ?? '') : en.weekly.bossLost}</p>
+            <Link to="/progress" className={`${buttonClass({ variant: 'secondary' })} mt-3`}>
+              {en.weekly.seeReport}
+            </Link>
+          </Card>
+        )}
         <LevelCard progress={levelFor(xp)} totalXp={xp} stats={statLevels(breakdown)} />
         <StreakCard streak={streakFor(history, today)} />
         {examPeriod && (
@@ -82,6 +97,7 @@ export function StatusScreen() {
           quests={quests}
           weekly={weekly}
           sleepTargetMin={history.profile.sleepTargetMin}
+          boss={bossFor(history, weekStart(today))}
         />
         <SleepCard />
         <DrinkButtons

@@ -1,8 +1,10 @@
-import { CalendarCheck, Check, Circle, Lock } from 'lucide-react'
+import { CalendarCheck, Check, Circle, Crown, Lock } from 'lucide-react'
 import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
 import { displayProtein } from '../../domain/food'
 import type { QuestResult, WeeklyResult } from '../../domain/quests'
+import type { BossResult } from '../../domain/weekly'
+import { BossChecks } from '../progress/WeeklyReportCard'
 import { roundKcal } from '../../domain/targets'
 import { Card, ProgressBar, STAT_STYLE, cx } from '../../ui'
 import { formatDuration } from './formatSleep'
@@ -79,10 +81,12 @@ export interface QuestBoardProps {
   quests: QuestResult[]
   weekly: WeeklyResult[]
   sleepTargetMin: number
+  /** This week's boss so far (plan §7). */
+  boss: BossResult
 }
 
 /** Today's seven quests and this week's quests (plan §7, §10). */
-export function QuestBoard({ quests, weekly, sleepTargetMin }: QuestBoardProps) {
+export function QuestBoard({ quests, weekly, sleepTargetMin, boss }: QuestBoardProps) {
   const earned = quests.reduce((sum, quest) => sum + quest.xp, 0)
   const max = quests.reduce((sum, quest) => sum + (quest.available ? quest.maxXp : 0), 0)
   return (
@@ -152,6 +156,13 @@ export function QuestBoard({ quests, weekly, sleepTargetMin }: QuestBoardProps) 
             </li>
           ))}
         </ul>
+        <section aria-label={en.weekly.thisWeekBoss} className="mt-3 border-t border-border pt-3">
+          <h3 className="mb-2 flex items-center gap-2 font-semibold">
+            <Crown aria-hidden="true" size={18} className="text-accent" />
+            {en.weekly.thisWeekBoss}
+          </h3>
+          <BossChecks boss={boss} />
+        </section>
       </Card>
     </>
   )
