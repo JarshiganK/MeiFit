@@ -245,3 +245,20 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Training on another plan day** (approved default): "Train anyway" on a rest day, or "Do a different workout", picks a plan day. Today becomes a training day with that day's planned sets (`days.planWeekday`, unindexed). "Back to today's plan" undoes it.
 - **Rest timer and PR detection** are Phase 2 Must items.
 - **Test change, explained:** `e2e/train.spec.ts` (item 9) looked for the text "Squat" in today's card. The session rows now add a hidden "Change set N of Squat" label, so it matched four times. It now looks for the exercise heading.
+
+## 2026-10-26: Phase 1 item 11 (quest board, XP and levels)
+
+- **Nothing is stored** (plan §9): quest results and total XP are worked out on Status from the logs since the setup date (`src/domain/quests.ts`), so days logged before the board existed get credit, and a corrected log corrects the XP.
+- **Daily quests** follow plan §7 with the approved defaults:
+  - **Protein items:** one logged line counts as one protein item.
+  - **Dinner:** "two proteins", or on a flex day "dinner logged and within budget + 50 kcal". For under-18s it's always two proteins (owner answer B).
+  - **Daily protein:** "log all three main meals" for the first 14 days, and until a protein threshold has been set.
+  - **Workout:** 80% of the planned sets saved with the day (item 10). A planned rest day earns 10. With no plan, the workout quest shows as locked ("Build a plan on Train to unlock it") and isn't counted in today's available XP.
+  - **Study and sleep:** study gives 30 XP per block, up to 5; sleep uses the day's main sleep.
+- **No exam multiplier, stats, ranks or streaks yet** (owner answer A; Phase 2). Each quest shows its stat (STR, VIT or INT) with an icon, ready for Phase 2 stats. The stat colour is never the only signal.
+- **Weekly quests** (approved default): 3+ weigh-ins (20 XP) and a backup export (15 XP). They count once the Monday–Sunday week is over, credited to its Sunday; Status shows this week's progress.
+- **Levels:** n → n + 1 costs 100 + 25 × n; tests check 2,025 XP for level 10 and 67,275 for level 70.
+- **Level-up moment:** a short celebration (1.5 s animation, off under reduced motion) in a dialog that any tap skips. The highest level already celebrated is remembered per phone in `localStorage` (`dq.seenLevel`), a UI convenience rather than game data; the first visit just records it.
+- **Quest completion motion:** a done quest's check mark pops (300 ms, transform only).
+- **Status layout** (plan §10): level card, today's quests, weekly quests, sleep, Quick drinks (+1) and the flex-day switch (hidden for under-18s). The Import button and fitness-check banner come with Phases 2–3.
+- **Bug found in design review:** the theme clears Tailwind's default text sizes, so `text-5xl`/`text-6xl` rendered as body text (the level number and the study countdown were tiny). They now use the `text-display` token, and `tests/token-classes.test.ts` fails on any text size the theme doesn't define.
