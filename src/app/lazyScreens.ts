@@ -40,6 +40,11 @@ export const PlanEditorScreen = lazy(() =>
 export const FitnessCheckFlow = lazy(() =>
   import('../features/fitness/FitnessCheckFlow').then((m) => ({ default: m.FitnessCheckFlow })),
 )
+export const ShortcutHelpScreen = lazy(() =>
+  import('../features/settings/ShortcutHelpScreen').then((m) => ({
+    default: m.ShortcutHelpScreen,
+  })),
+)
 export const SetupFlow = lazy(() =>
   import('../features/setup/SetupFlow').then((m) => ({ default: m.SetupFlow })),
 )

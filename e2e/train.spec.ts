@@ -37,6 +37,8 @@ test('build a plan and see today’s exercises on Train', async ({ page }) => {
 
 for (const theme of ['dark', 'light'] as ThemeName[]) {
   test(`plan editor and Train with a plan pass axe (${theme})`, async ({ page }) => {
+    // Four axe scans take close to 30 s on WebKit.
+    test.setTimeout(90_000)
     await useTheme(page, theme)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/train/plan')

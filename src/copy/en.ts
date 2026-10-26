@@ -999,6 +999,41 @@ export const en = {
     healthNote:
       'Numbers are estimates, not medical advice. If you have a medical condition, see a doctor before changing how you eat or train.',
   },
+  shortcuts: {
+    title: 'Shortcut help',
+    hint: 'Reminders and alarms through the Shortcuts app',
+    intro:
+      'A Home Screen app can’t send its own notifications, so reminders come from the Shortcuts app on your iPhone. Set each one up once; adjust the times to your lecture timetable.',
+    remindersTitle: 'Reminders',
+    remindersHow: 'For each reminder:',
+    steps: [
+      'Open Shortcuts and go to Automation.',
+      'Tap + (or New Automation), then choose Time of Day.',
+      'Set the time and how often it repeats (daily, or the days shown), then choose Run Immediately.',
+      'Add the action Show Notification and type the reminder text.',
+      'Tap Done.',
+    ],
+    reminders: {
+      quests: { time: 'Daily 7:00', text: 'Daily quests ready' },
+      lunch: { time: 'Daily 12:30', text: 'Lunch: two proteins' },
+      gym: { time: '18:00 on training days', text: 'Gym time' },
+      sleep: { time: 'Daily 22:15', text: 'Wind down, log sleep' },
+      backup: { time: 'Saturday 9:00', text: 'Export a backup; fitness check if due' },
+      report: { time: 'Monday 7:00', text: 'Weekly boss result and report' },
+    },
+    trainingDays: (days: string) => `Your training days: ${days}.`,
+    noPlan: 'Build a plan on Train and its days show here.',
+    focusTitle: 'Focus timer alarm',
+    focusBody:
+      'The Study screen’s “Also start a Clock alarm” button runs a shortcut named “Focus 50” (or “Focus 25” and so on, matching your block length), so an alarm rings even when the app is closed.',
+    focusSteps: [
+      'Open Shortcuts and tap + to make a new shortcut.',
+      'Add the action Start Timer and set it to 50 minutes.',
+      'Rename the shortcut exactly “Focus 50”, then tap Done.',
+      'In Study, tap “Also start a Clock alarm” once and allow it to open Shortcuts.',
+    ],
+    note: 'Notifications come from Shortcuts, so tapping one opens Shortcuts, not this app. Open Daily Quest from the Home Screen.',
+  },
   profile: {
     title: 'Profile and targets',
     hint: 'Your answers and current targets.',

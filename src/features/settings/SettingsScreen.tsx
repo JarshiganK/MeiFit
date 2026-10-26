@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  Bell,
   ChevronRight,
   HeartPulse,
   Lock,
@@ -74,6 +75,12 @@ export function SettingsScreen() {
               icon={<UserRound size={20} />}
               label={en.profile.title}
               hint={en.profile.hint}
+            />
+            <LinkRow
+              to="/settings/shortcuts"
+              icon={<Bell size={20} />}
+              label={en.shortcuts.title}
+              hint={en.shortcuts.hint}
             />
             <LinkRow
               to="/settings/menu"
