@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
 import type { LevelProgress } from '../../domain/levels'
-import { Button, Card, ProgressBar } from '../../ui'
+import { nextRankLevel, rankFor, type statLevels } from '../../domain/stats'
+import { Button, Card, ProgressBar, StatBadge } from '../../ui'
 
 const SEEN_KEY = 'dq.seenLevel'
 
@@ -23,9 +24,17 @@ function writeSeen(level: number): void {
   }
 }
 
-/** Level, XP bar and total XP (plan §10), plus the level-up moment. */
-export function LevelCard({ progress, totalXp }: { progress: LevelProgress; totalXp: number }) {
+export interface LevelCardProps {
+  progress: LevelProgress
+  totalXp: number
+  stats: ReturnType<typeof statLevels>
+}
+
+/** Level, rank, XP bar, total XP and stats (plan §7, §10), plus the level-up moment. */
+export function LevelCard({ progress, totalXp, stats }: LevelCardProps) {
   const { level, intoLevel, needed } = progress
+  const rank = rankFor(level)
+  const nextLevel = nextRankLevel(level)
   // The highest level already celebrated on this phone. The first visit just records it.
   const [seen, setSeen] = useState(() => readSeen() ?? level)
   const celebrate = level > seen
@@ -48,9 +57,19 @@ export function LevelCard({ progress, totalXp }: { progress: LevelProgress; tota
             {level}
           </p>
         </div>
-        <p className="text-right text-sm text-muted tabular-nums">
-          {en.status.totalXp(formatNumber(totalXp))}
-        </p>
+        <div className="text-right">
+          <p className="inline-flex rounded-md border border-accent px-2 py-0.5 font-display text-lg font-bold text-accent">
+            {en.status.rank(rank)}
+          </p>
+          <p className="text-sm text-muted tabular-nums">
+            {nextLevel === undefined
+              ? en.status.topRank
+              : en.status.nextRank(rankFor(nextLevel), nextLevel)}
+          </p>
+          <p className="text-sm text-muted tabular-nums">
+            {en.status.totalXp(formatNumber(totalXp))}
+          </p>
+        </div>
       </div>
       <ProgressBar
         className="mt-3"
@@ -62,6 +81,26 @@ export function LevelCard({ progress, totalXp }: { progress: LevelProgress; tota
       <p className="mt-1 text-sm text-muted tabular-nums">
         {en.status.xpToNext(formatNumber(needed - intoLevel), level + 1)}
       </p>
+      <section aria-label={en.status.stats} className="mt-4 grid grid-cols-3 gap-3">
+        {(['str', 'vit', 'int'] as const).map((stat) => (
+          <div key={stat} className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-x-1">
+              <StatBadge stat={stat} />
+              <span className="text-sm font-semibold tabular-nums">
+                {en.status.statLevel(stats[stat].level)}
+              </span>
+            </div>
+            <ProgressBar
+              size="sm"
+              tone={stat}
+              label={`${en.stats[`${stat}Name`]} ${en.status.statLevel(stats[stat].level)}`}
+              value={stats[stat].intoLevel}
+              max={stats[stat].needed}
+              valueText={en.status.statValue(stats[stat].intoLevel, stats[stat].needed)}
+            />
+          </div>
+        ))}
+      </section>
       {celebrate && <LevelUp level={level} onClose={dismiss} />}
     </Card>
   )

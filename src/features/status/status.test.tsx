@@ -177,3 +177,26 @@ describe('quick logs on Status (plan §10)', () => {
     expect(screen.queryByRole('switch', { name: 'Flex day' })).not.toBeInTheDocument()
   })
 })
+
+describe('rank and stats (plan §7)', () => {
+  it('shows the rank, the next rank and a level for each stat', async () => {
+    await seed()
+    // 7 nights of sleep: 140 VIT, so VIT reaches level 2.
+    await db.sleepLogs.bulkAdd(
+      Array.from({ length: 7 }, (_, i) => ({
+        wakeDate: `2026-10-${String(10 + i).padStart(2, '0')}`,
+        bedAt: 0,
+        wakeAt: 0,
+        minutes: 450,
+        source: 'tap' as const,
+      })),
+    )
+    await openStatus()
+    expect(screen.getByText('Rank E')).toBeInTheDocument()
+    expect(screen.getByText('Rank D at level 10')).toBeInTheDocument()
+    const stats = screen.getByRole('region', { name: 'Stats' })
+    expect(within(stats).getByRole('progressbar', { name: 'Vitality Lv 2' })).toBeInTheDocument()
+    expect(within(stats).getByRole('progressbar', { name: 'Strength Lv 1' })).toBeInTheDocument()
+    expect(within(stats).getByRole('progressbar', { name: 'Intellect Lv 1' })).toBeInTheDocument()
+  })
+})

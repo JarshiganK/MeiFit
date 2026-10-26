@@ -10,7 +10,8 @@ import { getProfile } from '../../db/profile'
 import type { Food } from '../../db/types'
 import { ageOn } from '../../domain/date'
 import { levelFor } from '../../domain/levels'
-import { indexHistory, questsForDay, totalXp, weeklyQuests } from '../../domain/quests'
+import { indexHistory, questsForDay, weeklyQuests, xpBreakdown } from '../../domain/quests'
+import { statLevels } from '../../domain/stats'
 import { streakFor } from '../../domain/streak'
 import { ADULT_AGE } from '../../domain/targets'
 import { Card, useToast } from '../../ui'
@@ -44,7 +45,8 @@ export function StatusScreen() {
   if (data === null) return null
 
   const { history } = data
-  const xp = totalXp(history, today)
+  const breakdown = xpBreakdown(history, today)
+  const xp = breakdown.total
   const quests = questsForDay(indexHistory(history), today)
   const weekly = weeklyQuests(history, today)
   const isMinor = ageOn(history.profile.birthDate, today) < ADULT_AGE
@@ -63,7 +65,7 @@ export function StatusScreen() {
       <ScreenHeader title={en.status.title} />
       <div className="flex flex-col gap-4 pt-2">
         <FitnessBanner today={today} />
-        <LevelCard progress={levelFor(xp)} totalXp={xp} />
+        <LevelCard progress={levelFor(xp)} totalXp={xp} stats={statLevels(breakdown)} />
         <StreakCard streak={streakFor(history, today)} />
         <QuestBoard
           quests={quests}

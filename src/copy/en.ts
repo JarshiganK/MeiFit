@@ -86,6 +86,12 @@ export const en = {
     levelUpBody: (level: number) => `You reached level ${level}. Keep it steady.`,
     continue: 'Continue',
     quick: 'Quick log',
+    rank: (rank: string) => `Rank ${rank}`,
+    nextRank: (rank: string, level: number) => `Rank ${rank} at level ${level}`,
+    topRank: 'Top rank',
+    stats: 'Stats',
+    statLevel: (level: number) => `Lv ${level}`,
+    statValue: (into: number, needed: number) => `${into} of ${needed} toward the next level`,
   },
   streak: {
     title: 'Streak',
