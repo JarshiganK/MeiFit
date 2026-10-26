@@ -7,6 +7,7 @@ import {
   plannedSetCount,
   plannedSetsDone,
   prefill,
+  progressionFor,
   valuesFor,
   type LoggedSet,
 } from './session'
@@ -73,6 +74,16 @@ describe('pre-fill from the last session', () => {
     expect(prefill(target, 'weight-reps', 3, previous)).toEqual({ reps: 7, weightKg: 40 })
   })
 
+  it('uses a target raised since last time', () => {
+    const previous = lastSessionSets(sets, 1, '2026-10-26')
+    const raised = { exerciseId: 1, sets: 3, repMin: 8, repMax: 12, targetKg: 42.5 }
+    expect(prefill(raised, 'weight-reps', 1, previous)).toEqual({ reps: 9, weightKg: 42.5 })
+    const hold = [set('2026-10-22', 1, { seconds: 30 })]
+    expect(prefill({ exerciseId: 1, sets: 1, seconds: 35 }, 'seconds', 1, hold)).toEqual({
+      seconds: 35,
+    })
+  })
+
   it('falls back to the plan target: the bottom of the rep range', () => {
     expect(
       prefill(
@@ -118,5 +129,38 @@ describe('workout quest (plan §7)', () => {
     expect(meetsWorkoutQuest(9, 8)).toBe(true) // ⌈7.2⌉ = 8
     expect(meetsWorkoutQuest(9, 7)).toBe(false)
     expect(meetsWorkoutQuest(0, 0)).toBe(false)
+  })
+})
+
+describe('progression suggestions (plan §6)', () => {
+  const done = (setNumber: number, values: Partial<LoggedSet>) =>
+    set('2026-10-22', setNumber, values)
+
+  it('adds 2.5 kg once every planned set reached the top of the rep range', () => {
+    const target = { exerciseId: 1, sets: 3, repMin: 8, repMax: 12, targetKg: 40 }
+    const all12 = [1, 2, 3].map((n) => done(n, { reps: 12, weightKg: 40 }))
+    expect(progressionFor(target, 'weight-reps', all12)).toEqual({ ...target, targetKg: 42.5 })
+    const oneShort = [...all12.slice(0, 2), done(3, { reps: 11, weightKg: 40 })]
+    expect(progressionFor(target, 'weight-reps', oneShort)).toBeUndefined()
+    // Lighter than the target doesn't count.
+    const lighter = [1, 2, 3].map((n) => done(n, { reps: 12, weightKg: 35 }))
+    expect(progressionFor(target, 'weight-reps', lighter)).toBeUndefined()
+    // Missing a set: no suggestion.
+    expect(progressionFor(target, 'weight-reps', all12.slice(0, 2))).toBeUndefined()
+  })
+
+  it('raises the rep range by 2 for bodyweight moves', () => {
+    const target = { exerciseId: 1, sets: 2, repMin: 8, repMax: 12 }
+    const sets = [1, 2].map((n) => done(n, { reps: 12 }))
+    expect(progressionFor(target, 'reps', sets)).toEqual({ ...target, repMin: 10, repMax: 14 })
+    expect(progressionFor({ exerciseId: 1, sets: 1 }, 'reps', sets)).toBeUndefined()
+  })
+
+  it('adds 5 seconds to a hold', () => {
+    const target = { exerciseId: 1, sets: 2, seconds: 30 }
+    const sets = [1, 2].map((n) => done(n, { seconds: 30 }))
+    expect(progressionFor(target, 'seconds', sets)).toEqual({ ...target, seconds: 35 })
+    expect(progressionFor({ ...target, seconds: 0 }, 'seconds', sets)).toBeUndefined()
+    expect(progressionFor(target, 'seconds', [sets[0]!, done(2, { seconds: 25 })])).toBeUndefined()
   })
 })

@@ -77,7 +77,14 @@ export function prefill(
   previous: readonly LoggedSet[],
 ): SetValues {
   const match = previous.find((s) => s.setNumber === setNumber) ?? previous.at(-1)
-  if (match) return valuesFor(type, match)
+  if (match) {
+    // A target raised since last time (a progression step) wins over last time's weight or hold.
+    return valuesFor(type, {
+      reps: match.reps ?? 0,
+      weightKg: Math.max(match.weightKg ?? 0, target.targetKg ?? 0),
+      seconds: Math.max(match.seconds ?? 0, target.seconds ?? 0),
+    })
+  }
   return valuesFor(type, {
     reps: target.repMin ?? target.repMax ?? 0,
     weightKg: target.targetKg ?? 0,
@@ -106,4 +113,38 @@ export function plannedSetsDone(
 /** The workout quest's main rule (plan §7): at least 80% of the planned sets. */
 export function meetsWorkoutQuest(planned: number, done: number): boolean {
   return planned > 0 && done >= Math.ceil(planned * WORKOUT_QUEST_SHARE)
+}
+
+/** Steps up when the last session hit the top of the target on every planned set. */
+export const PROGRESSION = { kg: 2.5, reps: 2, seconds: 5 } as const
+
+/**
+ * A suggested next target (plan §6: progression suggestions), or undefined.
+ * Weight × reps: every planned set reached the top of the rep range, so add
+ * 2.5 kg. Reps only: raise the range by 2. Holds: add 5 seconds.
+ */
+export function progressionFor(
+  target: PlannedExercise,
+  type: ExerciseType,
+  previous: readonly LoggedSet[],
+): PlannedExercise | undefined {
+  const planned = previous.filter((s) => s.setNumber <= target.sets)
+  if (planned.length < target.sets) return undefined
+  if (type === 'seconds') {
+    const seconds = target.seconds ?? 0
+    if (seconds <= 0 || !planned.every((s) => (s.seconds ?? 0) >= seconds)) return undefined
+    return { ...target, seconds: seconds + PROGRESSION.seconds }
+  }
+  const top = target.repMax ?? target.repMin
+  if (top === undefined || !planned.every((s) => (s.reps ?? 0) >= top)) return undefined
+  if (type === 'reps') {
+    return {
+      ...target,
+      repMin: (target.repMin ?? top) + PROGRESSION.reps,
+      repMax: top + PROGRESSION.reps,
+    }
+  }
+  const kg = target.targetKg ?? 0
+  if (!planned.every((s) => (s.weightKg ?? 0) >= kg)) return undefined
+  return { ...target, targetKg: kg + PROGRESSION.kg }
 }
