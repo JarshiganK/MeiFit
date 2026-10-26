@@ -39,11 +39,11 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 | Workout       | Session logging, pre-fill from last session                           | 1      | done                                                                                                                                                                        | `src/domain/session.ts`, `src/db/sessions.ts`, `src/features/train/SessionCard.tsx`                                                   |
 | Workout       | Rest timer, PR detection, exam-mode workout plan                      | 2 Must | todo                                                                                                                                                                        |                                                                                                                                       |
 | Workout       | Progression suggestions, missed-session reschedule                    | 2 Nice | todo                                                                                                                                                                        |                                                                                                                                       |
-| Fitness check | 4-weekly check, baseline, history and comparison, target review       | 2 Must | todo                                                                                                                                                                        |                                                                                                                                       |
+| Fitness check | 4-weekly check, baseline, history and comparison, target review       | 2 Must | done                                                                                                                                                                        | `src/domain/fitness.ts`, `src/features/fitness/`, `src/db/fitness.ts`                                                                 |
 | Sleep         | Two-tap sleep and wake log                                            | 1      | done                                                                                                                                                                        | `src/domain/sleep.ts`, `src/db/sleep.ts`, `src/features/status/SleepCard.tsx`                                                         |
 | Sleep         | Import from Apple Health through a Shortcut                           | 3      | todo                                                                                                                                                                        |                                                                                                                                       |
 | Body          | Weight log with weekly average chart                                  | 1      | done                                                                                                                                                                        | `src/domain/body.ts`, `src/db/body.ts`, `src/features/progress/WeightCard.tsx`, `src/features/progress/WeightChart.tsx`               |
-| Body          | Waist log every 2 weeks, calorie adjustment suggestions               | 2 Must | todo                                                                                                                                                                        |                                                                                                                                       |
+| Body          | Waist log every 2 weeks, calorie adjustment suggestions               | 2 Must | done (suggestions at fitness checks; the weekly report adds them weekly)                                                                                                    | `src/features/progress/WaistForm.tsx`, `src/domain/fitness.ts`                                                                        |
 | Study         | Focus timer                                                           | 1      | done                                                                                                                                                                        | `src/domain/study.ts`, `src/db/study.ts`, `src/features/study/`                                                                       |
 | Study         | Exam and deadline calendar, auto exam mode                            | 2 Must | todo                                                                                                                                                                        |                                                                                                                                       |
 | Study         | Hours per subject                                                     | 2 Nice | todo                                                                                                                                                                        |                                                                                                                                       |
@@ -67,6 +67,17 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 9. Workout plan builder: **done** (`src/domain/workout.ts`, `src/db/workout.ts`, `src/features/train/`)
 10. Workout session logging with pre-fill: **done** (`src/domain/session.ts`, `src/db/sessions.ts`, `src/features/train/SessionCard.tsx`)
 11. Quest board, XP and levels: **done** (`src/domain/quests.ts`, `src/domain/levels.ts`, `src/features/status/`)
+
+## Phase 2 build order (Must, then Nice)
+
+1. Fitness checks and waist log: **done** (`src/domain/fitness.ts`, `src/features/fitness/`)
+2. Streaks and shields: **next**
+3. Stats and ranks
+4. Exam calendar, exam mode and exam workout plan
+5. Rest timer and PR detection
+6. Weekly report and boss
+7. Shortcuts reminders
+8. Nice: achievements, progression suggestions, missed-session reschedule, hours per subject, mood check-in
 
 ## Open TODOs
 

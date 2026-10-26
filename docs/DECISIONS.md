@@ -262,3 +262,26 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Quest completion motion:** a done quest's check mark pops (300 ms, transform only).
 - **Status layout** (plan §10): level card, today's quests, weekly quests, sleep, Quick drinks (+1) and the flex-day switch (hidden for under-18s). The Import button and fitness-check banner come with Phases 2–3.
 - **Bug found in design review:** the theme clears Tailwind's default text sizes, so `text-5xl`/`text-6xl` rendered as body text (the level number and the study countdown were tiny). They now use the `text-display` token, and `tests/token-classes.test.ts` fails on any text size the theme doesn't define.
+
+## 2026-10-26: Phase 2 Must 1 (fitness checks and waist log)
+
+- **Due dates** (plan §4): the first check is the baseline date booked at setup; each later one is the Saturday of the week that falls one interval (default 4 weeks, 3–6 in Settings) after the last check. The window is 3 days either side. A missed window moves the check a week at a time, with no penalty ("Moved to this weekend").
+- **Status banner** while the window is open and no check has been done in it; Progress lists past checks and the next due date. The check can always be started from `/fitness-check`.
+- **Flow:** intro, body, strength, endurance, recovery, review (full screen, like setup). Each test can be left empty. The draft is saved after every step (`fitnessDraft`, device-only like the setup draft), because the check takes about 20 minutes and iOS may close the app.
+  - **Body:** the weekly average weight is automatic from weigh-ins (never typed). Waist is entered at the navel (40–200 cm), and the progress photo is a reminder only.
+  - **Strength:** pick up to 3 weight × reps exercises (remembered in `fitnessLifts`). The estimated 1RM is the best set of the last 28 days, weight × (1 + reps ÷ 30), to the nearest 0.5 kg.
+- **Review:**
+  - each result beside the last check, with an icon and a word (Up, Down, Same, New): never colour alone;
+  - the last 4 weeks' averages (`src/domain/review.ts`), which the weekly report reuses;
+  - recalculated targets from the current weekly average, plus the plan §2 adjustment rule. Fat loss only: −175 kcal if the average hasn't dropped over 2 weeks; +175 if losing more than 1% a week after the first 2 weeks. 175 is the middle of 150–200, and the result is never below the floor;
+  - the protein quest nudged halfway toward the target (rounded to 5 g, at least +5 g, never past the target).
+  - Each change is a separate switch, off by default ("you confirm every change"). Confirmed changes start a `targetHistory` row on the check date (`reason: 'fitness-check'`).
+  - If the goal weight or waist is reached, a switch offers "Switch my goal to maintain".
+  - Under-18s see protein only.
+- **Rewards:** 50 VIT plus 10 STR per improved endurance test (up to 30), worked out from the saved checks and credited on the check date. No XP is stored.
+- **Waist log:** a waist field on Progress (and the check's waist goes into the day's body log). The weekly quest "Measure your waist" (15 XP) appears when one is due: a measurement earns XP if the last credited one is 13 or more days earlier, which keeps it to every 2 weeks with a day of slack. It's credited on the day measured.
+- **Test changes, explained:**
+  - The Weight card now has a second Save (waist). So `src/features/progress/weight.test.tsx`, `e2e/weight.spec.ts` and the screenshot script now use the weight form's Save.
+  - The weekly-quest test in `src/domain/quests.test.ts` now also expects the due waist quest.
+  - `src/db/history.test.ts` counts the 15 XP from its waist row.
+- Exam mode will shrink the check to weight and waist; that lands with exam mode.
