@@ -257,7 +257,13 @@ export async function createBackup(now: number): Promise<BackupFile> {
  * restore. Not cryptographic: it only answers "has anything changed?".
  */
 export function fingerprintTables(tables: BackupTables): string {
-  const content = JSON.stringify({ ...tables, exportLogs: [] })
+  const content = JSON.stringify({
+    ...tables,
+    exportLogs: [],
+    // Opening the app writes each day's planned-rest flag from the plan; that
+    // alone isn't a change worth backing up. Flex days are the user's choice.
+    days: tables.days.filter((day) => day.isFlexDay),
+  })
   // cyrb53: a fast 53-bit string hash with good spread.
   let h1 = 0xdeadbeef
   let h2 = 0x41c6ce57

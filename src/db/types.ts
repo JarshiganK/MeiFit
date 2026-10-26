@@ -8,8 +8,20 @@
 import type { LocalDate } from '../domain/date'
 import type { FoodCategory, FoodUnit, MealItem, MealSlot } from '../domain/food'
 import type { ActivityLevel, Goal, Pace, Sex } from '../domain/targets'
+import type { ExerciseType, PlannedExercise } from '../domain/workout'
 
-export type { ActivityLevel, FoodCategory, FoodUnit, Goal, MealItem, MealSlot, Pace, Sex }
+export type {
+  ActivityLevel,
+  ExerciseType,
+  FoodCategory,
+  FoodUnit,
+  Goal,
+  MealItem,
+  MealSlot,
+  Pace,
+  PlannedExercise,
+  Sex,
+}
 
 /** Epoch milliseconds. */
 export type Instant = number
@@ -99,22 +111,11 @@ export interface Combo {
   items: { foodId: number; portion: number }[]
 }
 
-export type ExerciseType = 'weight-reps' | 'reps' | 'seconds'
-
 export interface Exercise {
   id?: number
   name: string
   muscleGroup: string
   type: ExerciseType
-}
-
-export interface PlannedExercise {
-  exerciseId: number
-  sets: number
-  repMin?: number
-  repMax?: number
-  seconds?: number
-  targetKg?: number
 }
 
 export interface WorkoutPlan {

@@ -324,6 +324,15 @@ describe('backup status', () => {
     expect(await getBackupStatus()).toMatchObject({ changedSinceLast: true, needsBackup: true })
   })
 
+  it('ignores the planned-rest rows written when the app opens', async () => {
+    await seedWithoutExports()
+    await prepareExport(NOW)
+    await db.days.add({ date: '2026-10-26', isFlexDay: false, isPlannedRest: true })
+    expect((await getBackupStatus()).needsBackup).toBe(false)
+    await db.days.update('2026-10-26', { isFlexDay: true })
+    expect((await getBackupStatus()).needsBackup).toBe(true)
+  })
+
   it('ignores the export log itself and device-only settings', async () => {
     await seedWithoutExports()
     await prepareExport(NOW)
