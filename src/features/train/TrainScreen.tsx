@@ -5,24 +5,41 @@ import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { useToday } from '../../app/useToday'
 import { en } from '../../copy/en'
+import { getDay } from '../../db/days'
+import { sessionDate, setsFor, setsOn } from '../../db/sessions'
 import { allExercises, getPlan } from '../../db/workout'
 import { weekday } from '../../domain/date'
-import { WEEKDAYS, planDayFor } from '../../domain/workout'
+import { WEEKDAYS } from '../../domain/workout'
 import { Card, EmptyState, buttonClass, cx } from '../../ui'
-import { targetText, weekdayName } from './format'
+import { weekdayName } from './format'
+import { SessionCard } from './SessionCard'
 
 /** Train: the week at a glance and today's planned exercises (plan §10). */
 export function TrainScreen() {
   const today = useToday()
-  const data = useLiveQuery(async () => ({
-    plan: await getPlan('normal'),
-    exercises: await allExercises(),
-  }))
+  const data = useLiveQuery(async () => {
+    const plan = await getPlan('normal')
+    // A session that started before midnight is still "today's" workout (plan §5).
+    const date = await sessionDate(Date.now())
+    const day = await getDay(date)
+    const planDay = plan?.days.find((d) => d.weekday === (day?.planWeekday ?? weekday(date)))
+    return {
+      plan,
+      date,
+      day,
+      exercises: await allExercises(),
+      sets: await setsOn(date),
+      history: await setsFor(planDay?.exercises.map((e) => e.exerciseId) ?? []),
+    }
+  }, [today])
 
   if (!data) return <ScreenFallback />
   const { plan, exercises } = data
   const editLink = (
-    <Link to="/train/plan" className={buttonClass({ variant: 'primary' })}>
+    <Link
+      to="/train/plan"
+      className={buttonClass({ variant: plan && plan.days.length > 0 ? 'secondary' : 'primary' })}
+    >
       {plan && plan.days.length > 0 ? en.train.editPlan : en.train.build}
     </Link>
   )
@@ -42,8 +59,6 @@ export function TrainScreen() {
   }
 
   const todayNumber = weekday(today)
-  const day = planDayFor(plan, today)
-  const exercise = (id: number) => exercises.find((e) => e.id === id)
 
   return (
     <>
@@ -74,34 +89,14 @@ export function TrainScreen() {
           </ul>
         </Card>
 
-        <Card title={en.train.today(weekdayName(todayNumber))} framed>
-          {!day ? (
-            <p className="text-muted">{en.train.restToday}</p>
-          ) : day.exercises.length === 0 ? (
-            <p className="text-muted">{en.train.noExercises}</p>
-          ) : (
-            <>
-              <p className="mb-2 text-sm text-muted">
-                {en.train.exerciseCount(day.exercises.length)}
-              </p>
-              <ul className="divide-y divide-border">
-                {day.exercises.map((target, index) => {
-                  const ex = exercise(target.exerciseId)
-                  return (
-                    <li key={`${target.exerciseId}-${index}`} className="py-2">
-                      <span className="block font-semibold">
-                        {ex?.name ?? en.plan.unknownExercise}
-                      </span>
-                      <span className="block text-sm text-muted tabular-nums">
-                        {targetText(target, ex?.type)}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          )}
-        </Card>
+        <SessionCard
+          date={data.date}
+          plan={plan}
+          day={data.day}
+          exercises={exercises}
+          sets={data.sets}
+          history={data.history}
+        />
 
         <div>{editLink}</div>
       </div>

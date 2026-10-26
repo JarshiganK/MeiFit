@@ -1,5 +1,6 @@
 import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
+import type { SetValues } from '../../domain/session'
 import type { ExerciseType, PlannedExercise } from '../../domain/workout'
 
 function reps(target: PlannedExercise): string {
@@ -18,4 +19,12 @@ export function targetText(target: PlannedExercise, type: ExerciseType | undefin
 
 export function weekdayName(weekday: number): string {
   return en.train.weekdayNames[weekday - 1] ?? ''
+}
+
+/** "8 reps × 40 kg", "8 reps" or "30 s". */
+export function valuesText(type: ExerciseType, values: SetValues): string {
+  const v = en.session.values
+  if (type === 'seconds') return v.seconds(values.seconds ?? 0)
+  if (type === 'reps') return v.reps(values.reps ?? 0)
+  return v.weightReps(values.reps ?? 0, formatNumber(values.weightKg ?? 0))
 }

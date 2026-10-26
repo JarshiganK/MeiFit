@@ -145,6 +145,8 @@ test('flex day budget, +1 drink and a custom entry', async ({ page }) => {
 
   await page.getByRole('button', { name: '+1 Plain tea' }).click()
   await expect(page.getByText('Added Plain tea (× 1) to drinks')).toBeVisible()
+  // The Undo toast sits over the bottom of the screen; close it before tapping there.
+  await page.getByRole('button', { name: 'Dismiss' }).click()
 
   await page.getByRole('button', { name: 'Something else' }).click()
   const sheet = page.getByRole('dialog', { name: 'Add something else' })

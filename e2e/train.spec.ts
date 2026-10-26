@@ -27,7 +27,7 @@ test('build a plan and see today’s exercises on Train', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'Monday' }).getByText('Squat')).toBeVisible()
   await page.getByRole('link', { name: 'Back' }).click()
   const today = page.getByRole('region', { name: 'Today, Monday' })
-  await expect(today.getByText('Squat')).toBeVisible()
+  await expect(today.getByRole('heading', { name: 'Squat' })).toBeVisible()
 
   const plans = (await idbAll(page, 'workoutPlans')) as { days: { weekday: number }[] }[]
   expect(plans[0]?.days.map((d) => d.weekday)).toEqual([1])
