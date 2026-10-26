@@ -40,6 +40,8 @@ function history(patch: Partial<QuestHistory> = {}): QuestHistory {
     exports: [],
     waists: [],
     checks: [],
+    examPeriods: [],
+    examPlan: undefined,
     ...patch,
   }
 }
@@ -348,5 +350,34 @@ describe('xpBreakdown', () => {
       total: 130,
     })
     expect(xpBreakdown(h, '2026-10-18').total).toBe(0)
+  })
+})
+
+describe('exam mode (plan §7)', () => {
+  const examPeriods = [{ startsOn: '2026-10-20', endsOn: '2026-10-30' }]
+
+  it('multiplies study XP by 1.5: 45 per block, 345 for a full day', () => {
+    const study = [{ date: DAY, minutes: 250, completed: true, source: 'timer' as const }]
+    const q = quests(history({ examPeriods, study }))
+    expect(q.study).toMatchObject({ xp: 225, maxXp: 225, variant: 'exam' })
+    expect(quests(history({ study })).study).toMatchObject({ xp: 150, maxXp: 150 })
+  })
+
+  it('uses the exam workout plan instead of the normal one', () => {
+    const plan = { days: [{ weekday: 1, exercises: [{ exerciseId: 1, sets: 5 }] }] }
+    const examPlan = { days: [{ weekday: 2, exercises: [{ exerciseId: 2, sets: 2 }] }] }
+    // Monday: a training day normally, a rest day in exam mode.
+    expect(quests(history({ plan, examPlan, examPeriods })).workout.variant).toBe('restDay')
+    expect(quests(history({ plan, examPlan })).workout.variant).toBe('training')
+    // An empty exam plan falls back to the normal plan.
+    expect(quests(history({ plan, examPlan: { days: [] }, examPeriods })).workout.variant).toBe(
+      'training',
+    )
+  })
+
+  it('hides the waist quest and its XP during exam mode', () => {
+    const h = history({ examPeriods, waists: [{ date: '2026-10-25' }] })
+    expect(weeklyQuests(h, '2026-10-25').map((q) => q.id)).toEqual(['weighIns', 'backup'])
+    expect(bonusXp(h, DAY)).toBe(0)
   })
 })

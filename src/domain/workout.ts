@@ -93,13 +93,25 @@ export function workoutsInPlan(plan: PlanShape | undefined): number {
 export function restDaysToWrite(
   lastSaved: LocalDate | undefined,
   today: LocalDate,
-  plan: PlanShape | undefined,
+  planFor: (date: LocalDate) => PlanShape | undefined,
   savedDates: ReadonlySet<LocalDate>,
 ): ({ date: LocalDate; isFlexDay: boolean } & DayRule)[] {
   const from = lastSaved && lastSaved < today ? addDays(lastSaved, 1) : today
   return datesInRange(from, today)
     .filter((date) => !savedDates.has(date))
-    .map((date) => ({ date, isFlexDay: false, ...dayRule(plan, date) }))
+    .map((date) => ({ date, isFlexDay: false, ...dayRule(planFor(date), date) }))
+}
+
+/**
+ * The plan that applies on a date: the exam plan during exam mode, if it has
+ * any training days (plan §7), otherwise the normal plan.
+ */
+export function activePlan<P extends PlanShape>(
+  examDay: boolean,
+  normal: P | undefined,
+  exam: P | undefined,
+): P | undefined {
+  return examDay && exam && exam.days.length > 0 ? exam : normal
 }
 
 export interface DayRule {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  activePlan,
   dayRule,
   defaultTarget,
   isPlannedRest,
@@ -43,7 +44,9 @@ describe('plan days', () => {
 
 describe('restDaysToWrite (approved default)', () => {
   it('writes every missing day since the last saved one, from the plan as it is now', () => {
-    expect(restDaysToWrite('2026-10-22', '2026-10-26', plan, new Set(['2026-10-22']))).toEqual([
+    expect(
+      restDaysToWrite('2026-10-22', '2026-10-26', () => plan, new Set(['2026-10-22'])),
+    ).toEqual([
       { date: '2026-10-23', isFlexDay: false, isPlannedRest: false, plannedSets: 3 }, // Friday
       { date: '2026-10-24', isFlexDay: false, isPlannedRest: true },
       { date: '2026-10-25', isFlexDay: false, isPlannedRest: true },
@@ -52,12 +55,19 @@ describe('restDaysToWrite (approved default)', () => {
   })
 
   it('writes only today the first time, and never overwrites a saved day', () => {
-    expect(restDaysToWrite(undefined, '2026-10-27', plan, new Set())).toEqual([
+    expect(restDaysToWrite(undefined, '2026-10-27', () => plan, new Set())).toEqual([
       { date: '2026-10-27', isFlexDay: false, isPlannedRest: true },
     ])
-    expect(restDaysToWrite('2026-10-27', '2026-10-27', plan, new Set(['2026-10-27']))).toEqual([])
     expect(
-      restDaysToWrite('2026-10-24', '2026-10-26', plan, new Set(['2026-10-24', '2026-10-25'])),
+      restDaysToWrite('2026-10-27', '2026-10-27', () => plan, new Set(['2026-10-27'])),
+    ).toEqual([])
+    expect(
+      restDaysToWrite(
+        '2026-10-24',
+        '2026-10-26',
+        () => plan,
+        new Set(['2026-10-24', '2026-10-25']),
+      ),
     ).toEqual([{ date: '2026-10-26', isFlexDay: false, isPlannedRest: false, plannedSets: 3 }])
   })
 })
@@ -67,6 +77,16 @@ describe('dayRule', () => {
     expect(dayRule(plan, '2026-10-26')).toEqual({ isPlannedRest: false, plannedSets: 3 })
     expect(dayRule(plan, '2026-10-27')).toEqual({ isPlannedRest: true })
     expect(dayRule(undefined, '2026-10-27')).toEqual({ isPlannedRest: false })
+  })
+})
+
+describe('activePlan', () => {
+  const exam = { days: [{ weekday: 2, exercises: [] }] }
+  it('uses the exam plan on exam days when it has training days', () => {
+    expect(activePlan(true, plan, exam)).toBe(exam)
+    expect(activePlan(false, plan, exam)).toBe(plan)
+    expect(activePlan(true, plan, { days: [] })).toBe(plan)
+    expect(activePlan(true, plan, undefined)).toBe(plan)
   })
 })
 

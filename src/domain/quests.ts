@@ -18,10 +18,11 @@ import {
 import { flexBudget } from './flex'
 import { dayTotals, type LoggedMeal } from './food'
 import { mainSleep, meetsSleepTarget } from './sleep'
+import { STUDY_MULTIPLIER, isExamDay, type Period } from './exams'
 import { checkRewards, creditedWaistDates, type CheckResults } from './fitness'
 import { blocksOn, type LoggedSession } from './study'
 import { meetsWorkoutQuest, plannedSetsDone } from './session'
-import { dayRule, planDayFor, type PlanShape } from './workout'
+import { activePlan, dayRule, planDayFor, type PlanShape } from './workout'
 import { ADULT_AGE } from './targets'
 
 export type QuestId =
@@ -56,7 +57,7 @@ export interface QuestResult {
   /** How far along it is, for the board. */
   progress: { value: number; max: number }
   /** Which version of the quest applies today. */
-  variant?: 'flexDinner' | 'calibration' | 'threshold' | 'restDay' | 'training' | 'noPlan'
+  variant?: 'flexDinner' | 'calibration' | 'threshold' | 'restDay' | 'training' | 'noPlan' | 'exam'
 }
 
 export interface QuestHistory {
@@ -82,6 +83,10 @@ export interface QuestHistory {
   waists: readonly { date: LocalDate }[]
   /** Completed fitness checks (plan §4). */
   checks: readonly ({ date: LocalDate } & CheckResults)[]
+  /** Saved exam-mode periods, automatic and manual (plan §7). */
+  examPeriods: readonly Period[]
+  /** The exam-mode workout plan, if built. */
+  examPlan: PlanShape | undefined
 }
 
 function groupBy<T>(items: readonly T[], key: (item: T) => LocalDate): Map<LocalDate, T[]> {
@@ -196,7 +201,10 @@ export function questsForDay(index: IndexedHistory, date: LocalDate): QuestResul
       )
 
   // Workout: 80% of the planned sets; a planned rest day earns 10.
-  const rule = day ?? { ...dayRule(index.source.plan, date), planWeekday: undefined }
+  // In exam mode the exam plan replaces the normal one (plan §7), if there is one.
+  const examDay = isExamDay(date, index.source.examPeriods)
+  const plan = activePlan(examDay, index.source.plan, index.source.examPlan)
+  const rule = day ?? { ...dayRule(plan, date), planWeekday: undefined }
   const sets = index.sets.get(date) ?? []
   const planned = rule.plannedSets ?? 0
   let workout: QuestResult
@@ -212,8 +220,8 @@ export function questsForDay(index: IndexedHistory, date: LocalDate): QuestResul
   } else if (planned > 0) {
     const planDay =
       rule.planWeekday !== undefined
-        ? index.source.plan?.days.find((d) => d.weekday === rule.planWeekday)
-        : planDayFor(index.source.plan, date)
+        ? plan?.days.find((d) => d.weekday === rule.planWeekday)
+        : planDayFor(plan, date)
     const doneSets = Math.min(
       planned,
       planDay ? plannedSetsDone(planDay.exercises, sets) : sets.filter((s) => s.done).length,
@@ -237,16 +245,18 @@ export function questsForDay(index: IndexedHistory, date: LocalDate): QuestResul
     }
   }
 
-  // Study: 30 INT per block, up to 5.
+  // Study: 30 INT per block, up to 5; ×1.5 in exam mode (plan §7).
   const blocks = blocksOn(date, index.study.get(date) ?? [], profile.blockMin)
+  const perBlock = examDay ? xp.studyBlock * STUDY_MULTIPLIER : xp.studyBlock
   const study: QuestResult = {
     id: 'study',
     stat: 'int',
     done: blocks > 0,
-    xp: blocks * xp.studyBlock,
-    maxXp: 5 * xp.studyBlock,
+    xp: blocks * perBlock,
+    maxXp: 5 * perBlock,
     available: true,
     progress: { value: blocks, max: 5 },
+    ...(examDay ? { variant: 'exam' as const } : {}),
   }
 
   // Sleep: the main sleep that ended today meets the target.
@@ -328,7 +338,9 @@ export function weeklyQuests(history: QuestHistory, date: LocalDate): WeeklyResu
  * the last credited one) or was credited that week. Its XP counts on the day.
  */
 function waistQuest(history: QuestHistory, date: LocalDate, week: Set<LocalDate>): WeeklyResult[] {
-  const credited = creditedWaistDates(history.waists.map((w) => w.date))
+  // Hidden in exam mode (plan §7).
+  if (isExamDay(date, history.examPeriods)) return []
+  const credited = creditedWaistDates(waistDates(history))
   const thisWeek = credited.find((d) => week.has(d))
   const before = credited.filter((d) => d < weekStart(date)).at(-1)
   const due = before === undefined || daysBetween(before, addDays(weekStart(date), 6)) >= 13
@@ -344,6 +356,11 @@ function waistQuest(history: QuestHistory, date: LocalDate, week: Set<LocalDate>
   ]
 }
 
+/** Waist measurements outside exam mode (the waist quest is hidden during exams). */
+function waistDates(history: QuestHistory): LocalDate[] {
+  return history.waists.map((w) => w.date).filter((d) => !isExamDay(d, history.examPeriods))
+}
+
 /** XP from waist measurements and fitness checks, credited on their own dates, up to `today`. */
 export function bonusXp(history: QuestHistory, today: LocalDate): number {
   const { vit, str, plain } = bonusBreakdown(history, today)
@@ -354,7 +371,7 @@ function bonusBreakdown(
   history: QuestHistory,
   today: LocalDate,
 ): { vit: number; str: number; plain: number } {
-  const waist = creditedWaistDates(history.waists.map((w) => w.date)).filter(
+  const waist = creditedWaistDates(waistDates(history)).filter(
     (d) => d >= history.profile.setupDate && d <= today,
   ).length
   const checks = [...history.checks].sort((a, b) => a.date.localeCompare(b.date))
