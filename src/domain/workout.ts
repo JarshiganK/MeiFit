@@ -95,11 +95,24 @@ export function restDaysToWrite(
   today: LocalDate,
   plan: PlanShape | undefined,
   savedDates: ReadonlySet<LocalDate>,
-): { date: LocalDate; isFlexDay: boolean; isPlannedRest: boolean }[] {
+): ({ date: LocalDate; isFlexDay: boolean } & DayRule)[] {
   const from = lastSaved && lastSaved < today ? addDays(lastSaved, 1) : today
   return datesInRange(from, today)
     .filter((date) => !savedDates.has(date))
-    .map((date) => ({ date, isFlexDay: false, isPlannedRest: isPlannedRest(plan, date) }))
+    .map((date) => ({ date, isFlexDay: false, ...dayRule(plan, date) }))
+}
+
+export interface DayRule {
+  isPlannedRest: boolean
+  /** Planned sets on a training day (absent on rest days and without a plan). */
+  plannedSets?: number
+}
+
+/** What the plan says about a date: rest, or how many sets are planned. */
+export function dayRule(plan: PlanShape | undefined, date: LocalDate): DayRule {
+  const day = planDayFor(plan, date)
+  if (!day) return { isPlannedRest: isPlannedRest(plan, date) }
+  return { isPlannedRest: false, plannedSets: day.exercises.reduce((sum, e) => sum + e.sets, 0) }
 }
 
 /** Sorts plan days Monday to Sunday. */

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dayRule,
   defaultTarget,
   isPlannedRest,
   planDayFor,
@@ -43,10 +44,10 @@ describe('plan days', () => {
 describe('restDaysToWrite (approved default)', () => {
   it('writes every missing day since the last saved one, from the plan as it is now', () => {
     expect(restDaysToWrite('2026-10-22', '2026-10-26', plan, new Set(['2026-10-22']))).toEqual([
-      { date: '2026-10-23', isFlexDay: false, isPlannedRest: false }, // Friday
+      { date: '2026-10-23', isFlexDay: false, isPlannedRest: false, plannedSets: 3 }, // Friday
       { date: '2026-10-24', isFlexDay: false, isPlannedRest: true },
       { date: '2026-10-25', isFlexDay: false, isPlannedRest: true },
-      { date: '2026-10-26', isFlexDay: false, isPlannedRest: false }, // Monday
+      { date: '2026-10-26', isFlexDay: false, isPlannedRest: false, plannedSets: 3 }, // Monday
     ])
   })
 
@@ -57,7 +58,15 @@ describe('restDaysToWrite (approved default)', () => {
     expect(restDaysToWrite('2026-10-27', '2026-10-27', plan, new Set(['2026-10-27']))).toEqual([])
     expect(
       restDaysToWrite('2026-10-24', '2026-10-26', plan, new Set(['2026-10-24', '2026-10-25'])),
-    ).toEqual([{ date: '2026-10-26', isFlexDay: false, isPlannedRest: false }])
+    ).toEqual([{ date: '2026-10-26', isFlexDay: false, isPlannedRest: false, plannedSets: 3 }])
+  })
+})
+
+describe('dayRule', () => {
+  it('saves the planned sets on training days', () => {
+    expect(dayRule(plan, '2026-10-26')).toEqual({ isPlannedRest: false, plannedSets: 3 })
+    expect(dayRule(plan, '2026-10-27')).toEqual({ isPlannedRest: true })
+    expect(dayRule(undefined, '2026-10-27')).toEqual({ isPlannedRest: false })
   })
 })
 
