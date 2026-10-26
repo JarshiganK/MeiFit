@@ -412,3 +412,13 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Meal Snap's prompt** must list the menu (plan §11). "Copy the prompt" fills it with the current menu's names, so the model can only answer with names the import can match. The page shows the prompt too, in case copying fails.
 - **Health Sync** builds `DQ1;sleep` and `DQ1;steps` lines; sleep from Apple Health needs a Sleep schedule (plan §11), otherwise the two-tap log stays the way.
 - The Import screen (item 1) is where both land; no new data model was needed.
+
+## 2026-10-26: Phase 3 item 3 (Gemini backup)
+
+- **Off by default** (CLAUDE.md §8): Settings → "Photo recognition (Gemini)" has a switch. Turning it on shows the API key (a password field) and the model name (default `gemini-2.5-flash`, kept in Settings so a retired model needs no code change, plan §11). The Food screen's Photo button appears only when it's on and a key is saved.
+- **Only the photo and the menu names are sent** (plan §16). The photo is decoded, drawn at no more than 800 px wide and re-encoded as JPEG (quality 0.8), which also drops its EXIF data such as location. The request goes to `generativelanguage.googleapis.com` (already the only extra origin in the CSP's `connect-src`). The key travels in the `x-goog-api-key` header, not the URL.
+- **The key stays on the phone:** it's a device-only setting, never exported and kept across imports (item 2). The switch and model name are ordinary settings.
+- **Same prompt as Meal Snap.** Gemini's answer is split into names and goes through the same review as an import (shared `MealReviewFields`): matched to the menu, the slot from the photo time, every pick changeable or skipped, then saved as an `import` meal.
+- **Errors are plain:** offline ("needs internet, log by tapping"), a failed request ("check your key and model name"), or no menu foods found.
+- **Privacy page and `PRIVACY.md`:** "coming in a later version" became "only works if you turn it on in Settings and add your own key". The mirror test keeps them identical.
+- **Testing:** the network is stubbed in component tests (URL, header, body, review and save); real requests need a key, so trying it is optional owner task 5.

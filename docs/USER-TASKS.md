@@ -27,3 +27,8 @@ Things that need your accounts or your phone. Numbered steps; tick them off as y
    1. Follow Settings → Shortcut help → Health Sync in the app.
    2. Test: run it, open Daily Quest → Import → Paste, and check the sleep and steps lines.
    3. Optional: make it a 7:00 Personal Automation.
+5. **Optional: try the Gemini backup.** Only if you want photo recognition without Meal Snap.
+   1. Get a free API key at Google AI Studio (aistudio.google.com → Get API key). Never put it in the code or on GitHub.
+   2. In Daily Quest: Settings → Photo recognition (Gemini) → turn on → paste the key → Save.
+   3. If Google has retired `gemini-2.5-flash` by then, enter the current Flash model name in "Model name".
+   4. On Food, tap Photo, take a picture of a plate, check the matches and tap "Add meal".
