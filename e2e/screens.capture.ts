@@ -98,6 +98,20 @@ for (const theme of THEMES) {
     await page.getByRole('button', { name: 'Dismiss' }).click()
     await shot(page, `progress-weight-${theme}`, true)
 
+    // A plan with two training days, then Train.
+    await page.goto('/train/plan')
+    const days = page.getByRole('region', { name: 'Training days' })
+    for (const day of ['Mon', 'Thu']) await days.getByRole('button', { name: day }).click()
+    const monday = page.getByRole('region', { name: 'Monday' })
+    for (const name of [/^Squat/, /^Push-ups/, /^Plank/]) {
+      await monday.getByRole('button', { name: 'Add exercise' }).click()
+      await page.getByRole('dialog').getByRole('button', { name }).click()
+    }
+    await page.getByRole('button', { name: 'Dismiss' }).click()
+    await shot(page, `train-plan-built-${theme}`, true)
+    await page.goto('/train')
+    await shot(page, `train-with-plan-${theme}`, true)
+
     await page.goto('/dev/ui')
     await expect(page.getByRole('heading', { name: 'Design tokens' })).toBeVisible()
     await shot(page, `dev-ui-${theme}`, true)

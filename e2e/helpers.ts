@@ -10,6 +10,7 @@ export const SCREENS = [
   { path: '/settings', heading: 'Settings' },
   { path: '/settings/profile', heading: 'Profile and targets' },
   { path: '/settings/menu', heading: 'Menu' },
+  { path: '/train/plan', heading: 'Workout plan' },
   { path: '/settings/privacy', heading: 'Privacy' },
   { path: '/settings/delete', heading: 'Delete all data' },
 ] as const

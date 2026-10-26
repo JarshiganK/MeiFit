@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { NumberStepper } from './NumberStepper'
 
 function Harness({ initial = 69.5 }: { initial?: number }) {
@@ -64,5 +64,30 @@ describe('NumberStepper', () => {
     await userEvent.type(input, 'abc')
     await userEvent.tab()
     expect(input).toHaveValue('69.5')
+  })
+
+  it('commits on Enter without submitting a surrounding form', async () => {
+    const onSubmit = vi.fn((event: { preventDefault: () => void }) => event.preventDefault())
+    function InForm() {
+      const [value, setValue] = useState(30)
+      return (
+        <form onSubmit={onSubmit}>
+          <NumberStepper
+            label="Seconds"
+            value={value}
+            onChange={setValue}
+            min={5}
+            max={600}
+            step={5}
+          />
+        </form>
+      )
+    }
+    render(<InForm />)
+    const input = screen.getByLabelText('Seconds')
+    await userEvent.clear(input)
+    await userEvent.type(input, '45{Enter}')
+    expect(input).toHaveValue('45')
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 })

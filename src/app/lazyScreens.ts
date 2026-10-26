@@ -34,6 +34,9 @@ export const ProfileScreen = lazy(() =>
 export const MenuEditorScreen = lazy(() =>
   import('../features/settings/MenuEditorScreen').then((m) => ({ default: m.MenuEditorScreen })),
 )
+export const PlanEditorScreen = lazy(() =>
+  import('../features/train/PlanEditorScreen').then((m) => ({ default: m.PlanEditorScreen })),
+)
 export const SetupFlow = lazy(() =>
   import('../features/setup/SetupFlow').then((m) => ({ default: m.SetupFlow })),
 )

@@ -61,7 +61,11 @@ export function NumberStepper({
               if (draft !== null) commit(Number(draft.replace(',', '.')))
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') event.currentTarget.blur()
+              // Enter commits the number; it doesn't submit a surrounding form with the old value.
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                event.currentTarget.blur()
+              }
             }}
             className="w-full min-w-0 bg-transparent text-center font-display font-semibold tabular-nums outline-none"
           />
