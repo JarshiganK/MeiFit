@@ -380,6 +380,26 @@ export const en = {
     setting: 'Rest between sets',
     settingHint: 'A rest timer starts each time you tick a set.',
   },
+  achievements: {
+    title: 'Achievements',
+    unlocked: (n: number, total: number) => `${n} of ${total} unlocked`,
+    names: {
+      ironWeek: 'Iron Week',
+      proteinHunter: 'Protein Hunter',
+      scholar: 'Scholar',
+      prBreaker: 'PR Breaker',
+      checkpoint: 'Checkpoint',
+    },
+    descriptions: {
+      ironWeek: 'Keep a 7-day streak.',
+      proteinHunter: 'Reach your protein quest on 30 days.',
+      scholar: 'Finish 100 study blocks.',
+      prBreaker: 'Set 10 personal records.',
+      checkpoint: 'Complete 3 fitness checks.',
+    },
+    progress: (value: number, goal: number) => `${value} of ${goal}`,
+    done: 'Unlocked',
+  },
   records: {
     title: 'Personal records',
     none: 'Records show up once you beat an earlier session.',
