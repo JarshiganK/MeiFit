@@ -4,16 +4,19 @@ import { useTheme } from '../app/useTheme'
 import {
   Button,
   Card,
+  ChoiceCards,
   EmptyState,
   IconButton,
   NumberStepper,
   ProgressBar,
   SegmentedControl,
+  SelectField,
   Sheet,
   StatBadge,
   Stepper,
   Switch,
   Tabs,
+  TextField,
   useToast,
 } from '../ui'
 
@@ -77,6 +80,8 @@ export function UiGallery() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [weight, setWeight] = useState(69.5)
   const [segment, setSegment] = useState<'a' | 'b' | 'c'>('a')
+  const [select, setSelect] = useState<'curry' | 'staple'>('curry')
+  const [choice, setChoice] = useState<'lose' | 'maintain' | undefined>('lose')
   const [on, setOn] = useState(true)
 
   return (
@@ -203,6 +208,26 @@ export function UiGallery() {
           hint="Lighter breakfast and lunch."
           checked={on}
           onChange={setOn}
+        />
+        <TextField label="Nickname" hint="Shown on your Status screen." defaultValue="Sam" />
+        <TextField label="Waist (cm)" defaultValue="400" error="That number looks off." />
+        <SelectField
+          label="Type"
+          options={[
+            { value: 'curry', label: 'Curries' },
+            { value: 'staple', label: 'Rice, bread and staples' },
+          ]}
+          value={select}
+          onChange={setSelect}
+        />
+        <ChoiceCards
+          label="Goal"
+          choices={[
+            { value: 'lose', label: 'Lose fat', hint: 'About 0.5 kg a week' },
+            { value: 'maintain', label: 'Maintain' },
+          ]}
+          value={choice}
+          onChange={setChoice}
         />
         <Stepper current={3} total={7} />
         <Tabs

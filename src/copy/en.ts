@@ -1103,7 +1103,7 @@ export const en = {
   },
   shortcuts: {
     title: 'Shortcut help',
-    hint: 'Reminders and alarms through the Shortcuts app',
+    hint: 'Reminders, alarms and photo import',
     intro:
       'A Home Screen app can’t send its own notifications, so reminders come from the Shortcuts app on your iPhone. Set each one up once; adjust the times to your lecture timetable.',
     remindersTitle: 'Reminders',

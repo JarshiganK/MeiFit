@@ -78,16 +78,16 @@ export function SettingsScreen() {
               hint={en.profile.hint}
             />
             <LinkRow
-              to="/settings/shortcuts"
-              icon={<Bell size={20} />}
-              label={en.shortcuts.title}
-              hint={en.shortcuts.hint}
-            />
-            <LinkRow
               to="/settings/menu"
               icon={<UtensilsCrossed size={20} />}
               label={en.menuEditor.title}
               hint={en.menuEditor.hint}
+            />
+            <LinkRow
+              to="/settings/shortcuts"
+              icon={<Bell size={20} />}
+              label={en.shortcuts.title}
+              hint={en.shortcuts.hint}
             />
           </div>
         </Card>
