@@ -4,6 +4,7 @@ import { useToday } from '../../app/useToday'
 import { FitnessHistory } from '../fitness/FitnessHistory'
 import { AchievementsCard } from './AchievementsCard'
 import { RecordsCard } from './RecordsCard'
+import { StepsCard } from './StepsCard'
 import { WeeklyReportCard } from './WeeklyReportCard'
 import { WeightCard } from './WeightCard'
 
@@ -17,6 +18,7 @@ export function ProgressScreen() {
         <WeightCard />
         <FitnessHistory today={today} />
         <RecordsCard />
+        <StepsCard today={today} />
         <AchievementsCard today={today} />
       </div>
     </>

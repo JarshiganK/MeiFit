@@ -45,6 +45,9 @@ export const ShortcutHelpScreen = lazy(() =>
     default: m.ShortcutHelpScreen,
   })),
 )
+export const ImportScreen = lazy(() =>
+  import('../features/import/ImportScreen').then((m) => ({ default: m.ImportScreen })),
+)
 export const SetupFlow = lazy(() =>
   import('../features/setup/SetupFlow').then((m) => ({ default: m.SetupFlow })),
 )

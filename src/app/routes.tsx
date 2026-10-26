@@ -6,6 +6,7 @@ import {
   DeleteAllScreen,
   FitnessCheckFlow,
   FoodScreen,
+  ImportScreen,
   MenuEditorScreen,
   PlanEditorScreen,
   PrivacyScreen,
@@ -39,6 +40,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <StatusScreen /> },
       { path: 'food', element: <FoodScreen /> },
+      { path: 'import', element: <ImportScreen /> },
       { path: 'train', element: <TrainScreen /> },
       { path: 'train/plan', element: <PlanEditorScreen /> },
       { path: 'study', element: <StudyScreen /> },

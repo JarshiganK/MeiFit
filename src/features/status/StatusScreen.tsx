@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { GraduationCap } from 'lucide-react'
+import { ClipboardPaste, GraduationCap } from 'lucide-react'
 import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { nowMs, useToday } from '../../app/useToday'
@@ -19,7 +19,7 @@ import { statLevels } from '../../domain/stats'
 import { streakFor } from '../../domain/streak'
 import { ADULT_AGE } from '../../domain/targets'
 import { Link } from 'react-router'
-import { Card, buttonClass, useToast } from '../../ui'
+import { Card, buttonClass, iconButtonClass, useToast } from '../../ui'
 import { FitnessBanner } from '../fitness/FitnessBanner'
 import { DrinkButtons } from '../food/DrinkButtons'
 import { FlexDaySwitch } from '../food/FlexDaySwitch'
@@ -73,7 +73,14 @@ export function StatusScreen() {
 
   return (
     <>
-      <ScreenHeader title={en.status.title} />
+      <ScreenHeader
+        title={en.status.title}
+        actions={
+          <Link to="/import" aria-label={en.import.open} className={iconButtonClass()}>
+            <ClipboardPaste aria-hidden="true" size={24} />
+          </Link>
+        }
+      />
       <div className="flex flex-col gap-4 pt-2">
         <FitnessBanner today={today} />
         {lastBoss && (
