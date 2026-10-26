@@ -4,6 +4,7 @@ import { nowMs } from '../../app/useToday'
 import { en } from '../../copy/en'
 import { choosePlanDay, restoreSet, tickSet, untickSet } from '../../db/sessions'
 import { getSetting, setSetting } from '../../db/settings'
+import { updateTarget } from '../../db/workout'
 import { REST_SECONDS, bestScores, setScore } from '../../domain/records'
 import type { DayRecord, Exercise, WorkoutPlan, WorkoutSet } from '../../db/types'
 import { weekday, type LocalDate } from '../../domain/date'
@@ -12,6 +13,7 @@ import {
   plannedSetCount,
   plannedSetsDone,
   prefill,
+  progressionFor,
   valuesFor,
   type SetValues,
 } from '../../domain/session'
@@ -162,6 +164,8 @@ export function SessionCard({ date, plan, day, exercises, sets, history }: Sessi
           const name = ex?.name ?? en.plan.unknownExercise
           const logged = sets.filter((s) => s.exerciseId === target.exerciseId)
           const previous = lastSessionSets(history, target.exerciseId, date)
+          // Only before today's sets start, so the plan doesn't change mid-session.
+          const next = logged.length === 0 ? progressionFor(target, type, previous) : undefined
           const count = Math.max(
             target.sets + (extra[index] ?? 0),
             ...logged.map((s) => s.setNumber),
@@ -170,6 +174,25 @@ export function SessionCard({ date, plan, day, exercises, sets, history }: Sessi
             <section key={`${target.exerciseId}-${index}`} aria-label={name}>
               <h3 className="font-semibold">{name}</h3>
               <p className="text-sm text-muted tabular-nums">{targetText(target, ex?.type)}</p>
+              {next && (
+                <div className="mt-2 rounded-md border border-accent p-3">
+                  <p className="font-semibold tabular-nums">
+                    {en.session.stepUp(targetText(next, ex?.type))}
+                  </p>
+                  <p className="text-sm text-muted">{en.session.stepUpHint}</p>
+                  <Button
+                    variant="secondary"
+                    className="mt-2"
+                    onClick={() => {
+                      void updateTarget(plan.id!, planDay.weekday, index, next).then(() =>
+                        toast.show({ message: en.session.planUpdated(name) }),
+                      )
+                    }}
+                  >
+                    {en.session.updatePlan}
+                  </Button>
+                </div>
+              )}
               <ul className="mt-1 divide-y divide-border">
                 {Array.from({ length: count }, (_, i) => i + 1).map((setNumber) => {
                   const row = logged.find((s) => s.setNumber === setNumber)

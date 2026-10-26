@@ -367,6 +367,10 @@ export const en = {
     dayOption: (day: string, count: string) => `${day} · ${count}`,
     allDone: 'All sets done. Great work.',
     record: (name: string) => `New personal record on ${name}! +25 STR`,
+    stepUp: (target: string) => `Ready to step up: ${target}`,
+    stepUpHint: 'You hit the top of your target on every set last time.',
+    updatePlan: 'Update plan',
+    planUpdated: (name: string) => `${name} target raised`,
     tickedRecord: (n: number, name: string) =>
       `Set ${n} of ${name} done. New personal record! +25 STR`,
   },

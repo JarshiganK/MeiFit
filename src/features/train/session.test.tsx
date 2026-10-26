@@ -166,3 +166,30 @@ describe('session logging', () => {
     expect(await setsOn('2026-10-27')).toEqual([])
   })
 })
+
+describe('progression suggestions (plan §6)', () => {
+  it('suggests +2.5 kg after a session at the top of the range, and updates the plan', async () => {
+    const last = '2026-10-19'
+    await db.workoutSets.bulkAdd(
+      [1, 2, 3].map((setNumber) => ({
+        date: last,
+        startedAt: atLocalTime(last, 18, 0),
+        exerciseId: 1,
+        setNumber,
+        reps: 12,
+        weightKg: 40,
+        done: true,
+      })),
+    )
+    const card = await openSession()
+    const squat = within(card).getByRole('region', { name: 'Squat' })
+    expect(within(squat).getByText('Ready to step up: 3 × 8–12 @ 42.5 kg')).toBeInTheDocument()
+    await userEvent.click(within(squat).getByRole('button', { name: 'Update plan' }))
+    expect(await screen.findByText('Squat target raised')).toBeInTheDocument()
+    await waitFor(async () =>
+      expect((await db.workoutPlans.toArray())[0]?.days[0]?.exercises[0]?.targetKg).toBe(42.5),
+    )
+    // The sets now start from the new weight.
+    expect(await within(squat).findAllByText('12 reps × 42.5 kg')).toHaveLength(3)
+  })
+})
