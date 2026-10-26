@@ -328,3 +328,24 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
   - Records are worked out from the logs (`src/domain/records.ts`) and counted in STR XP from the setup date. Sets from before setup still count as earlier bests.
 - **On ticking** a record set, the toast says "New personal record! +25 STR". Progress has a "Personal records" card with the best for each exercise and the number of records so far.
 - **Card subtitles** may be left empty (`Card` prop type change, no visual change).
+
+## 2026-10-26: Phase 2 Must 6 (weekly report and boss)
+
+- **Weekly boss** (plan §7), judged for each finished Monday–Sunday week since setup:
+  - **Weight on track:** needs 3+ weigh-ins that week.
+    - Losing: the week's average is below the reference. The reference is the latest weekly average from 2 or more weeks earlier, or the starting weight (the first weigh-in) in the first 2 weeks or when there's no such week.
+    - Maintaining: within ±1% of the goal weight, or of the starting weight without one.
+    - Building: above the reference by no more than 0.5%.
+  - **Workouts:** training days whose workout quest was done, against workouts per week from setup. If any day of the week is in exam mode, the target is 2 (or fewer, if the goal is lower), which errs on the side of study.
+  - **Study:** all study minutes against the weekly goal.
+  - **Reward:** 100 XP (plain XP, credited once the week ends) and a title. Titles are original names, earned in order, cycling after 8.
+- **Weekly report** on Progress, for any finished week (‹ ›), newest first:
+  - weight average, weigh-ins and change;
+  - workouts done against planned, study hours against the goal;
+  - sleep, protein and (adults only) calorie averages;
+  - days with 5+ quests;
+  - the boss with each part marked (icon plus a hidden "Met" or "Not yet");
+  - the titles earned so far.
+- **Calorie check** (plan §2): on the newest report only, for adults losing fat. It uses the same rule as the fitness check: −175 kcal if the average hasn't dropped over 2 weeks, +175 if losing more than 1% a week after the first 2 weeks. "Apply from today" adds a `manual` target row (never below the floor). The button hides once a change was applied that day, so it can't be stacked.
+- **Status** shows "This week's boss" under the weekly quests (progress so far), and on Mondays a "Last week's boss" banner linking to the report.
+- **XP total:** `src/domain/xp.ts` adds boss XP to the quest breakdown. Status uses it; the quest module stays free of the boss rules.

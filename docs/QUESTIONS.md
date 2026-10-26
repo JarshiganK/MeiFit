@@ -9,3 +9,4 @@ Decisions made during unattended builds that you may want to review. Each one is
 | 2026-10-26 | 9    | Should the plan's training days be forced to match "workouts per week" from setup?           | No: the editor shows both numbers. The weekly boss (Phase 2) uses the setup goal.                 |
 | 2026-10-26 | P2-1 | Should the fitness check's target changes be switched on by default?                         | Off: the plan says you confirm every change. One tap each to accept.                              |
 | 2026-10-26 | P2-3 | Stat scales: are STR 190, VIT 420 and INT 420 XP a fair "typical week" to balance the stats? | My estimate; tune `TYPICAL_WEEK_XP` in `src/domain/stats.ts` after 2 weeks of real use (plan §7). |
+| 2026-10-26 | P2-6 | Should one exam-mode day in a week be enough to lower the boss's workout target to 2?        | Yes (lenient, studies first). Alternative: only when most of the week is in exam mode.            |
