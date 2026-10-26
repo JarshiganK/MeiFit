@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ClipboardPaste, Footprints, Moon, Utensils } from 'lucide-react'
+import { ClipboardPaste, Footprints, Moon } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ScreenHeader } from '../../app/ScreenHeader'
@@ -7,36 +7,12 @@ import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
 import { activeMenu } from '../../db/food'
 import { importMeal, importSleep, importSteps } from '../../db/imports'
-import type { Food } from '../../db/types'
 import { formatShortDate, formatTime, minutesBetween, toLocalDate } from '../../domain/date'
-import { DEFAULT_PORTION, defaultSlot, mealItem, type MealSlot } from '../../domain/food'
-import {
-  bestMatch,
-  parseImport,
-  type ImportItem,
-  type ParsedImport,
-} from '../../domain/importFormat'
-import { Button, Card, SelectField, useToast } from '../../ui'
+import { parseImport, type ParsedImport } from '../../domain/importFormat'
+import { Button, Card, useToast } from '../../ui'
 import { formatDuration } from '../status/formatSleep'
-
-const SKIP = 'skip'
-const SLOTS: MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack']
-
-interface MealReview {
-  slot: MealSlot
-  /** A menu item id (as text) or SKIP, one per imported name. */
-  picks: string[]
-}
-
-function reviewFor(item: Extract<ImportItem, { kind: 'meal' }>, menu: Food[]): MealReview {
-  return {
-    slot: defaultSlot(item.at),
-    picks: item.names.map((name) => {
-      const match = bestMatch(name, menu)
-      return match ? String(match.item.id) : SKIP
-    }),
-  }
-}
+import { MealReviewFields } from './MealReviewFields'
+import { initialReview, reviewedItems, type MealReview } from './mealReview'
 
 /** Import from Shortcuts through the clipboard (plan §11). */
 export function ImportScreen() {
@@ -56,7 +32,7 @@ export function ImportScreen() {
     setReviews(
       Object.fromEntries(
         result.items.flatMap((item) =>
-          item.kind === 'meal' ? [[item.line, reviewFor(item, menu)]] : [],
+          item.kind === 'meal' ? [[item.line, initialReview(item.names, item.at, menu)]] : [],
         ),
       ),
     )
@@ -82,10 +58,7 @@ export function ImportScreen() {
       if (item.kind === 'steps') await importSteps(item.date, item.steps)
       if (item.kind === 'meal') {
         const review = reviews[item.line]!
-        const items = review.picks.flatMap((pick) => {
-          const food = menu.find((f) => String(f.id) === pick)
-          return food ? [mealItem({ ...food, id: food.id! }, DEFAULT_PORTION)] : []
-        })
+        const items = reviewedItems(review, menu)
         if (items.length === 0) continue
         await importMeal({ date: toLocalDate(item.at), at: item.at, slot: review.slot, items })
       }
@@ -94,11 +67,6 @@ export function ImportScreen() {
     toast.show({ message: copy.saved(count) })
     void navigate('/', { replace: true })
   }
-
-  const menuOptions = [
-    ...menu.map((food) => ({ value: String(food.id), label: food.name })),
-    { value: SKIP, label: copy.skip },
-  ]
 
   return (
     <>
@@ -175,38 +143,12 @@ export function ImportScreen() {
               )}
               subtitle={copy.mealHint}
             >
-              <div className="flex flex-col gap-3">
-                <SelectField
-                  label={copy.slotLabel}
-                  value={review.slot}
-                  options={SLOTS.map((value) => ({ value, label: en.food.slotSingular[value] }))}
-                  onChange={(slot) =>
-                    setReviews((r) => ({ ...r, [item.line]: { ...review, slot } }))
-                  }
-                />
-                {item.names.map((name, i) => (
-                  <div key={`${name}-${i}`} className="flex items-start gap-2">
-                    <Utensils aria-hidden="true" size={18} className="mt-9 shrink-0 text-muted" />
-                    <div className="min-w-0 flex-1">
-                      <SelectField
-                        label={copy.from(name)}
-                        value={review.picks[i] ?? SKIP}
-                        options={menuOptions}
-                        {...(review.picks[i] === SKIP ? { hint: copy.noMatch } : {})}
-                        onChange={(pick) =>
-                          setReviews((r) => ({
-                            ...r,
-                            [item.line]: {
-                              ...review,
-                              picks: review.picks.map((p, j) => (j === i ? pick : p)),
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <MealReviewFields
+                names={item.names}
+                menu={menu}
+                review={review}
+                onChange={(next) => setReviews((r) => ({ ...r, [item.line]: next }))}
+              />
             </Card>
           )
         })}
