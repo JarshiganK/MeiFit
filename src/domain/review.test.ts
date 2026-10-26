@@ -23,6 +23,7 @@ function history(patch: Partial<QuestHistory> = {}): QuestHistory {
     checks: [],
     examPeriods: [],
     examPlan: undefined,
+    exercises: [],
     ...patch,
   }
 }

@@ -80,6 +80,7 @@ describe('streakFor', () => {
       checks: [],
       examPeriods: [],
       examPlan: undefined,
+      exercises: [],
     }
   }
 

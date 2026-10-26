@@ -5,6 +5,7 @@ import {
   dayXp,
   indexHistory,
   questsForDay,
+  recordsUpTo,
   totalXp,
   weeklyQuests,
   xpBreakdown,
@@ -42,6 +43,7 @@ function history(patch: Partial<QuestHistory> = {}): QuestHistory {
     checks: [],
     examPeriods: [],
     examPlan: undefined,
+    exercises: [],
     ...patch,
   }
 }
@@ -379,5 +381,21 @@ describe('exam mode (plan §7)', () => {
     const h = history({ examPeriods, waists: [{ date: '2026-10-25' }] })
     expect(weeklyQuests(h, '2026-10-25').map((q) => q.id)).toEqual(['weighIns', 'backup'])
     expect(bonusXp(h, DAY)).toBe(0)
+  })
+})
+
+describe('personal record XP (plan §7)', () => {
+  it('adds 25 STR for each record since setup', () => {
+    const h = history({
+      exercises: [{ id: 1, type: 'reps' }],
+      sets: [
+        { date: '2026-09-20', exerciseId: 1, setNumber: 1, done: true, reps: 10 },
+        { date: '2026-09-25', exerciseId: 1, setNumber: 1, done: true, reps: 11 }, // before setup
+        { date: '2026-10-05', exerciseId: 1, setNumber: 1, done: true, reps: 12 },
+        { date: '2026-10-27', exerciseId: 1, setNumber: 1, done: true, reps: 14 }, // after today
+      ],
+    })
+    expect(recordsUpTo(h, DAY).map((r) => r.date)).toEqual(['2026-10-05'])
+    expect(xpBreakdown(h, DAY).str).toBe(25)
   })
 })

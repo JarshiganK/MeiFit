@@ -22,7 +22,8 @@ import { STUDY_MULTIPLIER, isExamDay, type Period } from './exams'
 import { checkRewards, creditedWaistDates, type CheckResults } from './fitness'
 import { blocksOn, type LoggedSession } from './study'
 import { meetsWorkoutQuest, plannedSetsDone } from './session'
-import { activePlan, dayRule, planDayFor, type PlanShape } from './workout'
+import { PR_XP, personalRecords, type RecordSet } from './records'
+import { activePlan, dayRule, planDayFor, type ExerciseType, type PlanShape } from './workout'
 import { ADULT_AGE } from './targets'
 
 export type QuestId =
@@ -74,7 +75,7 @@ export interface QuestHistory {
   meals: readonly (LoggedMeal & { date: LocalDate })[]
   sleeps: readonly { wakeDate: LocalDate; minutes: number }[]
   study: readonly LoggedSession[]
-  sets: readonly { date: LocalDate; exerciseId: number; setNumber: number; done: boolean }[]
+  sets: readonly (RecordSet & { setNumber: number })[]
   /** The current normal plan, used for days saved before planned sets were. */
   plan: PlanShape | undefined
   weighIns: readonly { date: LocalDate }[]
@@ -87,6 +88,8 @@ export interface QuestHistory {
   examPeriods: readonly Period[]
   /** The exam-mode workout plan, if built. */
   examPlan: PlanShape | undefined
+  /** Exercise types, to judge personal records. */
+  exercises: readonly { id?: number | undefined; type: ExerciseType }[]
 }
 
 function groupBy<T>(items: readonly T[], key: (item: T) => LocalDate): Map<LocalDate, T[]> {
@@ -356,6 +359,14 @@ function waistQuest(history: QuestHistory, date: LocalDate, week: Set<LocalDate>
   ]
 }
 
+/** Personal records from the setup date up to `today` (+25 STR each, plan §7). */
+export function recordsUpTo(history: QuestHistory, today: LocalDate) {
+  const types = new Map(history.exercises.map((e) => [e.id, e.type]))
+  return personalRecords(history.sets, (id) => types.get(id)).filter(
+    (r) => r.date >= history.profile.setupDate && r.date <= today,
+  )
+}
+
 /** Waist measurements outside exam mode (the waist quest is hidden during exams). */
 function waistDates(history: QuestHistory): LocalDate[] {
   return history.waists.map((w) => w.date).filter((d) => !isExamDay(d, history.examPeriods))
@@ -419,7 +430,7 @@ export function xpBreakdown(history: QuestHistory, today: LocalDate): XpBreakdow
   }
   const bonus = bonusBreakdown(history, today)
   result.vit += bonus.vit
-  result.str += bonus.str
+  result.str += bonus.str + recordsUpTo(history, today).length * PR_XP
   result.plain += bonus.plain
   result.total = result.str + result.vit + result.int + result.plain
   return result
