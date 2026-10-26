@@ -102,3 +102,27 @@ export async function acceptProteinThreshold(date: LocalDate, thresholdG: number
 export async function mealsBetween(from: LocalDate, to: LocalDate): Promise<Meal[]> {
   return db.meals.where('date').between(from, to, true, true).toArray()
 }
+
+/**
+ * Applies a suggested calorie change from `date` on (plan §2: "you confirm
+ * every change"). The new target never goes below the floor.
+ */
+export async function applyCalorieChange(date: LocalDate, deltaKcal: number): Promise<void> {
+  await db.transaction('rw', db.targetHistory, async () => {
+    const current = await currentTarget(date)
+    if (!current) throw new Error('No targets to change')
+    const kcal = Math.max(current.kcalFloor, current.kcal + deltaKcal)
+    if (current.startsOn === date && current.id !== undefined) {
+      await db.targetHistory.update(current.id, { kcal, reason: 'manual' })
+    } else {
+      await db.targetHistory.add({
+        startsOn: date,
+        kcal,
+        kcalFloor: current.kcalFloor,
+        proteinG: current.proteinG,
+        proteinQuestThresholdG: current.proteinQuestThresholdG,
+        reason: 'manual',
+      })
+    }
+  })
+}

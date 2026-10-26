@@ -3,6 +3,7 @@ import { DEFAULT_ROUTINE, buildSetup, type SetupAnswers } from '../domain/setup'
 import { db } from './db'
 import {
   acceptProteinThreshold,
+  applyCalorieChange,
   currentTarget,
   getProfile,
   latestWeighIn,
@@ -167,5 +168,32 @@ describe('acceptProteinThreshold', () => {
       '2026-10-01',
       '2026-10-14',
     ])
+  })
+})
+
+describe('applyCalorieChange', () => {
+  it('starts a manual target from the day, never below the floor', async () => {
+    await db.targetHistory.add({
+      startsOn: '2026-10-01',
+      kcal: 1800,
+      kcalFloor: 1700,
+      proteinG: 124,
+      proteinQuestThresholdG: 90,
+      reason: 'setup',
+    })
+    await applyCalorieChange('2026-10-26', -175)
+    expect(await currentTarget('2026-10-26')).toMatchObject({
+      kcal: 1700,
+      proteinQuestThresholdG: 90,
+      reason: 'manual',
+    })
+    expect((await currentTarget('2026-10-25'))?.kcal).toBe(1800)
+    await applyCalorieChange('2026-10-26', 175)
+    expect(await db.targetHistory.count()).toBe(2)
+    expect((await currentTarget('2026-10-26'))?.kcal).toBe(1875)
+  })
+
+  it('needs targets to change', async () => {
+    await expect(applyCalorieChange('2026-10-26', 175)).rejects.toThrow()
   })
 })
