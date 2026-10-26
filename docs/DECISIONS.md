@@ -373,3 +373,12 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Worked out from the logs** like XP. Correcting a log can lock one again.
 - **No extra XP:** the plan gives none for achievements.
 - **Display:** Progress shows each one with its description and a progress bar ("12 of 30"), or an award icon and "Unlocked". Visuals are original (lucide icons and the app's tokens).
+
+## 2026-10-26: Phase 2 Nice 4 (progression suggestions)
+
+- **Rule:** when the last session with an exercise reached the top of its target on every planned set, Train suggests the next step before today's sets start:
+  - weight × reps (at least the target weight): +2.5 kg;
+  - reps only: the rep range +2;
+  - holds: +5 s.
+- **"Update plan"** changes that exercise's target in the plan the day belongs to; nothing changes without the tap. The suggestion hides once today's sets begin, so the plan doesn't change mid-session.
+- **Pre-fill change:** pre-fill now uses the higher of last time's weight or hold and the plan's target, so a raised target shows up in the next session's pre-filled sets. Reps still come from last time. This refines item 10's rule; no existing test changed.
