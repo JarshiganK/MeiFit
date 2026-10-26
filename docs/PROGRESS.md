@@ -38,7 +38,7 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 | Workout       | Plan builder                                                          | 1      | done                                                                                                                                                                        | `src/domain/workout.ts`, `src/db/workout.ts`, `src/features/train/PlanEditorScreen.tsx`                                               |
 | Workout       | Session logging, pre-fill from last session                           | 1      | done                                                                                                                                                                        | `src/domain/session.ts`, `src/db/sessions.ts`, `src/features/train/SessionCard.tsx`                                                   |
 | Workout       | Rest timer, PR detection, exam-mode workout plan                      | 2 Must | done                                                                                                                                                                        | `src/domain/records.ts`, `src/features/train/RestTimerBar.tsx`, `src/features/progress/RecordsCard.tsx`                               |
-| Workout       | Progression suggestions, missed-session reschedule                    | 2 Nice | in progress: progression suggestions done; reschedule next                                                                                                                  | `src/domain/session.ts` (`progressionFor`), `src/features/train/SessionCard.tsx`                                                      |
+| Workout       | Progression suggestions, missed-session reschedule                    | 2 Nice | done                                                                                                                                                                        | `src/domain/session.ts` (`progressionFor`, `missedSessions`), `src/features/train/SessionCard.tsx`                                    |
 | Fitness check | 4-weekly check, baseline, history and comparison, target review       | 2 Must | done                                                                                                                                                                        | `src/domain/fitness.ts`, `src/features/fitness/`, `src/db/fitness.ts`                                                                 |
 | Sleep         | Two-tap sleep and wake log                                            | 1      | done                                                                                                                                                                        | `src/domain/sleep.ts`, `src/db/sleep.ts`, `src/features/status/SleepCard.tsx`                                                         |
 | Sleep         | Import from Apple Health through a Shortcut                           | 3      | todo                                                                                                                                                                        |                                                                                                                                       |
@@ -77,7 +77,15 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 5. Rest timer and PR detection: **done** (`src/domain/records.ts`)
 6. Weekly report and boss: **done** (`src/domain/weekly.ts`, `src/domain/xp.ts`)
 7. Shortcuts reminders: **done** (`src/features/settings/ShortcutHelpScreen.tsx`)
-8. Nice (**next**): achievements, progression suggestions, missed-session reschedule, hours per subject, mood check-in
+8. Nice: achievements, progression suggestions, missed-session reschedule, hours per subject, mood check-in: **done**
+
+## Phase 3 build order
+
+1. Import screen and the `DQ1` parser: **next**
+2. Meal Snap and Health Sync shortcuts (help pages; the shortcuts are owner tasks)
+3. Gemini backup (photo meal recognition with the user's own key)
+4. Visual theme polish
+5. Optional Teachable Machine model
 
 ## Open TODOs
 

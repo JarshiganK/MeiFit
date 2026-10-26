@@ -382,3 +382,9 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
   - holds: +5 s.
 - **"Update plan"** changes that exercise's target in the plan the day belongs to; nothing changes without the tap. The suggestion hides once today's sets begin, so the plan doesn't change mid-session.
 - **Pre-fill change:** pre-fill now uses the higher of last time's weight or hold and the plan's target, so a raised target shows up in the next session's pre-filled sets. Reps still come from last time. This refines item 10's rule; no existing test changed.
+
+## 2026-10-26: Phase 2 Nice 5 (missed-session reschedule)
+
+- **Rule:** a training day earlier this week (Monday to yesterday) counts as missed when its saved rules say training (planned sets > 0) and no set was done that day, unless a later day this week already ran that plan day. The plan in use on each day (normal or exam) gives the rule for days without a saved row.
+- **Prompt:** on a rest day with nothing logged yet, Train shows "You missed Thursday's workout. Do it today?" for the most recent missed day. "Do Thursday's workout" switches today to that plan day, the same as "Train anyway" (item 10), so it's saved with the date and judged by that day's sets.
+- It never moves past days and never nags on training days. Missing a workout has no penalty beyond the quest itself.
