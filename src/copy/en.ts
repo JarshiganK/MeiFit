@@ -479,6 +479,8 @@ export const en = {
     week: 'This week',
     weekHours: (hours: string, goal: number) => `${hours} h of your ${goal} h goal`,
     weekValue: (hours: string, goal: number) => `${hours} of ${goal} hours`,
+    bySubject: 'By subject',
+    subjectHours: (name: string, hours: string) => `${name}: ${hours} h`,
     add: 'Add study time',
     addTitle: 'Add study time',
     addIntro:

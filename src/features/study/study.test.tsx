@@ -162,3 +162,40 @@ describe('study log', () => {
     )
   })
 })
+
+describe('hours per subject (plan §6)', () => {
+  it('splits this week’s hours by subject', async () => {
+    await seedProfile()
+    await db.subjects.bulkAdd([
+      { id: 1, name: 'Maths' },
+      { id: 2, name: 'Physics' },
+    ])
+    const startedAt = START.getTime() - 300 * MIN
+    await db.studySessions.bulkAdd([
+      {
+        date: '2026-10-25',
+        startedAt,
+        minutes: 90,
+        completed: true,
+        source: 'manual',
+        subjectId: 1,
+      },
+      {
+        date: '2026-10-24',
+        startedAt,
+        minutes: 60,
+        completed: true,
+        source: 'manual',
+        subjectId: 2,
+      },
+      { date: '2026-10-23', startedAt, minutes: 30, completed: true, source: 'manual' },
+    ])
+    renderApp('/study')
+    const subjects = await screen.findByRole('region', { name: 'By subject' })
+    expect(
+      within(subjects)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['Maths: 1.5 h', 'Physics: 1 h', 'No subject: 0.5 h'])
+  })
+})

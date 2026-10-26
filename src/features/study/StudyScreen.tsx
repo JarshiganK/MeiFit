@@ -30,6 +30,7 @@ import { DEFAULT_ROUTINE } from '../../domain/setup'
 import {
   MAX_BLOCKS_PER_DAY,
   blocksOn,
+  minutesBySubject,
   validateManualMinutes,
   weekMinutes,
 } from '../../domain/study'
@@ -67,6 +68,7 @@ export function StudyScreen() {
   const blocks = blocksOn(today, data.week, data.blockMin)
   const hours = Math.round((weekMinutes(today, data.week) / 60) * 10) / 10
   const subjectName = (id: number | undefined) => data.subjects.find((s) => s.id === id)?.name
+  const bySubject = minutesBySubject(data.week)
 
   return (
     <>
@@ -145,6 +147,22 @@ export function StudyScreen() {
             valueText={copy.weekValue(formatNumber(hours), data.goalHours)}
           />
           <p className="mt-2 tabular-nums">{copy.weekHours(formatNumber(hours), data.goalHours)}</p>
+          {bySubject.length > 1 ||
+          (bySubject.length === 1 && bySubject[0]!.subjectId !== undefined) ? (
+            <section aria-label={copy.bySubject} className="mt-3">
+              <h3 className="text-sm font-semibold text-muted">{copy.bySubject}</h3>
+              <ul className="mt-1 flex flex-col gap-1 tabular-nums">
+                {bySubject.map((row) => (
+                  <li key={row.subjectId ?? 'none'}>
+                    {copy.subjectHours(
+                      subjectName(row.subjectId) ?? copy.noSubject,
+                      formatNumber(Math.round((row.minutes / 60) * 10) / 10),
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </Card>
 
         <ExamsCard today={today} subjects={data.subjects} />
