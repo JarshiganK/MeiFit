@@ -405,3 +405,10 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Sleep and steps** replace what's logged for that date (plan §11). For sleep that means every sleep ending that day, so a manual nap that day is replaced too (the plan's "replaces the old entry"). Steps are one row per date.
 - **Steps** show on Progress (latest day and 7-day average) once there are any. They don't feed a quest; the plan has none.
 - **e2e** uses the text box, because automated browsers can't reliably grant clipboard reads. The Paste path is covered by component tests with a stubbed clipboard, and on the iPhone by hand.
+
+## 2026-10-26: Phase 3 item 2 (Meal Snap and Health Sync shortcuts)
+
+- **The shortcuts are built on the iPhone,** so the app gives exact steps on Settings → Shortcut help, and `docs/USER-TASKS.md` lists them as tasks 3 and 4.
+- **Meal Snap's prompt** must list the menu (plan §11). "Copy the prompt" fills it with the current menu's names, so the model can only answer with names the import can match. The page shows the prompt too, in case copying fails.
+- **Health Sync** builds `DQ1;sleep` and `DQ1;steps` lines; sleep from Apple Health needs a Sleep schedule (plan §11), otherwise the two-tap log stays the way.
+- The Import screen (item 1) is where both land; no new data model was needed.

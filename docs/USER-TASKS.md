@@ -16,3 +16,14 @@ Things that need your accounts or your phone. Numbered steps; tick them off as y
    3. For each: choose Run Immediately, add the action Show Notification with the text above, and tap Done.
    4. Adjust the times to your lecture timetable.
    5. Check that each one shows a notification at its time.
+3. **Build the Meal Snap shortcut (plan §11, Shortcut A).** Needs an iPhone with Apple Intelligence (Private Cloud Compute).
+   1. In Daily Quest: Settings → Shortcut help → Meal Snap → "Copy the prompt" (it includes your current menu).
+   2. In Shortcuts: + → Take Photo → Use Model (Private Cloud Compute) with the copied prompt.
+   3. Add Text: `DQ1;meal;` then the Current Date (format ISO 8601), `;`, then the model's answer. Add Copy to Clipboard.
+   4. Add Show Notification "Meal copied. Open Daily Quest and tap Import." Name it "Meal Snap".
+   5. Optional: Settings → Action Button → Shortcut → Meal Snap.
+   6. Test: snap a plate, open Daily Quest → Import → Paste, and check the review screen.
+4. **Build the Health Sync shortcut (plan §11, Shortcut B).**
+   1. Follow Settings → Shortcut help → Health Sync in the app.
+   2. Test: run it, open Daily Quest → Import → Paste, and check the sleep and steps lines.
+   3. Optional: make it a 7:00 Personal Automation.
