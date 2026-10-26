@@ -1111,6 +1111,34 @@ export const en = {
       'In Study, tap “Also start a Clock alarm” once and allow it to open Shortcuts.',
     ],
     note: 'Notifications come from Shortcuts, so tapping one opens Shortcuts, not this app. Open Daily Quest from the Home Screen.',
+    mealSnapTitle: 'Meal Snap (photo to meal)',
+    mealSnapBody:
+      'Take a photo of your plate; Apple’s Private Cloud Compute names the foods from your menu, and the result is copied for you to import here. It needs internet; offline, log by tapping instead.',
+    mealSnapSteps: [
+      'Open Shortcuts, tap + and name it “Meal Snap”.',
+      'Add Take Photo.',
+      'Add Use Model, set to Private Cloud Compute, with the prompt below (tap Copy the prompt).',
+      'Add Text: DQ1;meal;[Current Date, ISO 8601];[the model’s answer]. Then add Copy to Clipboard.',
+      'Add Show Notification: “Meal copied. Open Daily Quest and tap Import.”',
+      'Optional: assign the shortcut to the Action button (Settings → Action Button).',
+    ],
+    prompt: (menu: string) =>
+      `Which of these foods are on the plate: ${menu}? Reply only with names from the list, separated by commas.`,
+    copyPrompt: 'Copy the prompt',
+    promptCopied: 'Prompt copied with your current menu',
+    promptHint: 'Copy it again after changing your menu.',
+    copyFailed: 'Couldn’t copy. Select the text above and copy it instead.',
+    healthTitle: 'Health Sync (sleep and steps)',
+    healthBody:
+      'Run it each morning: it reads last night’s sleep and yesterday’s steps from Apple Health and copies them for you to import here.',
+    healthSteps: [
+      'Open Shortcuts, tap + and name it “Health Sync”.',
+      'Add Find Health Samples: Steps, from yesterday. Add Calculate Statistics → Sum.',
+      'Add Find Health Samples: Sleep, ending today (needs a Sleep schedule; otherwise use the app’s two taps).',
+      'Add Text with two lines: DQ1;sleep;[sleep start];[sleep end] and DQ1;steps;[yesterday’s date, YYYY-MM-DD];[step total].',
+      'Add Copy to Clipboard and Show Notification: “Health copied. Open Daily Quest and tap Import.”',
+      'Optional: make it a Personal Automation at 7:00 each morning.',
+    ],
   },
   profile: {
     title: 'Profile and targets',

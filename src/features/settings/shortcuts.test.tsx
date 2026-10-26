@@ -44,3 +44,43 @@ describe('Shortcut help (plan §11)', () => {
     expect(screen.getByText(en.shortcuts.note)).toBeInTheDocument()
   })
 })
+
+describe('Meal Snap and Health Sync help (plan §11)', () => {
+  it('builds the Meal Snap prompt from the menu and copies it', async () => {
+    const writeText = vi.fn(() => Promise.resolve())
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    await seedProfile()
+    await db.foods.bulkAdd([
+      {
+        name: 'Rice',
+        category: 'staple',
+        serving: '1 cup',
+        unit: 'cups',
+        kcal: 200,
+        proteinG: 4,
+        countsAsProtein: false,
+      },
+      {
+        name: 'Chicken curry',
+        category: 'curry',
+        serving: '1',
+        unit: 'size',
+        kcal: 200,
+        proteinG: 20,
+        countsAsProtein: true,
+      },
+    ])
+    renderApp('/settings/shortcuts')
+    const snap = await screen.findByRole('region', { name: 'Meal Snap (photo to meal)' })
+    const prompt =
+      'Which of these foods are on the plate: Rice, Chicken curry? Reply only with names from the list, separated by commas.'
+    expect(await within(snap).findByText(prompt)).toBeInTheDocument()
+    await userEvent.click(within(snap).getByRole('button', { name: 'Copy the prompt' }))
+    expect(writeText).toHaveBeenCalledWith(prompt)
+    expect(await screen.findByText(en.shortcuts.promptCopied)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Health Sync (sleep and steps)' })).toHaveTextContent(
+      'DQ1;steps',
+    )
+    vi.unstubAllGlobals()
+  })
+})

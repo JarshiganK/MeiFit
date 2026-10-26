@@ -1,16 +1,28 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlarmClock, Bell } from 'lucide-react'
+import { AlarmClock, Bell, Camera, HeartPulse } from 'lucide-react'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { en } from '../../copy/en'
+import { activeMenu } from '../../db/food'
 import { getPlan } from '../../db/workout'
-import { Card } from '../../ui'
+import { Button, Card, useToast } from '../../ui'
 
 const ORDER = ['quests', 'lunch', 'gym', 'sleep', 'backup', 'report'] as const
 
 /** Settings → Shortcut help: reminders through Personal Automations (plan §11). */
 export function ShortcutHelpScreen() {
   const plan = useLiveQuery(() => getPlan('normal'))
+  const menu = useLiveQuery(activeMenu, [], [])
+  const toast = useToast()
   const copy = en.shortcuts
+  const prompt = copy.prompt(menu.map((f) => f.name).join(', '))
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt)
+      toast.show({ message: copy.promptCopied })
+    } catch {
+      toast.show({ message: copy.copyFailed })
+    }
+  }
   const trainingDays = plan?.days.map((d) => en.train.weekdays[d.weekday - 1]).join(', ')
   return (
     <>
@@ -43,6 +55,39 @@ export function ShortcutHelpScreen() {
             ))}
           </ol>
           <p className="mt-3 text-sm text-muted">{copy.note}</p>
+        </Card>
+
+        <Card title={copy.mealSnapTitle}>
+          <div className="flex items-start gap-3">
+            <Camera aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-vit" />
+            <p className="text-sm">{copy.mealSnapBody}</p>
+          </div>
+          <ol className="mt-3 list-decimal pl-5 text-sm">
+            {copy.mealSnapSteps.map((step) => (
+              <li key={step} className="py-0.5">
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 rounded-md border border-border bg-raised p-3 text-sm">{prompt}</p>
+          <Button variant="secondary" className="mt-2" onClick={() => void copyPrompt()}>
+            {copy.copyPrompt}
+          </Button>
+          <p className="mt-1 text-sm text-muted">{copy.promptHint}</p>
+        </Card>
+
+        <Card title={copy.healthTitle}>
+          <div className="flex items-start gap-3">
+            <HeartPulse aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-vit" />
+            <p className="text-sm">{copy.healthBody}</p>
+          </div>
+          <ol className="mt-3 list-decimal pl-5 text-sm">
+            {copy.healthSteps.map((step) => (
+              <li key={step} className="py-0.5">
+                {step}
+              </li>
+            ))}
+          </ol>
         </Card>
 
         <Card title={copy.focusTitle}>
