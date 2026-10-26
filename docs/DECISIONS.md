@@ -235,3 +235,13 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Bug found and fixed:** pressing Enter in a number stepper inside a form submitted the form with the old value before the typed one was committed. Enter now only commits the number (new unit test).
 - **Accessibility:** the weekday toggles use their visible text ("Mon") as their name (axe's label-in-name rule).
 - **Backup freshness ignores the automatic planned-rest rows.** Opening the app writes the day's planned-rest flag, which made every backup look out of date the next day (two Settings tests caught it). The "changed since the last backup" fingerprint now leaves out day rows that only carry that automatic flag. They are still in every backup; flex days still count as a change.
+
+## 2026-10-26: Phase 1 item 10 (workout session logging with pre-fill)
+
+- **One tap per set:** each planned set has a ✔ button that saves it with the values shown. Tapping the values opens a sheet to change reps, weight or seconds, then "Save and tick". Ticking a done set unticks it. Both offer Undo.
+- **Pre-fill** (plan §6): set n copies set n of the most recent earlier session with that exercise (or that session's last set when it had fewer). With no earlier session it uses the plan's target, taking the bottom of the rep range (approved default: an achievable start; progression suggestions are Phase 2).
+- **Sessions:** a set ticked within 3 hours of the previous one joins that session, keeping its date and start time. So a workout started at 23:50 stays on that day after midnight (plan §5). Each set saves `loggedAt`, an unindexed new field (no schema change; the backup check accepts it as optional).
+- **Planned sets are saved with the day** (`days.plannedSets`, unindexed). Plan edits later don't change how a past day is judged, like planned rest (plan §9). Item 11's workout quest counts ticked sets up to each exercise's planned number against it; extra sets ("Add a set") are logged but don't inflate the share.
+- **Training on another plan day** (approved default): "Train anyway" on a rest day, or "Do a different workout", picks a plan day. Today becomes a training day with that day's planned sets (`days.planWeekday`, unindexed). "Back to today's plan" undoes it.
+- **Rest timer and PR detection** are Phase 2 Must items.
+- **Test change, explained:** `e2e/train.spec.ts` (item 9) looked for the text "Squat" in today's card. The session rows now add a hidden "Change set N of Squat" label, so it matched four times. It now looks for the exercise heading.
