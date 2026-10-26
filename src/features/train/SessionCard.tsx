@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { nowMs } from '../../app/useToday'
 import { en } from '../../copy/en'
 import { choosePlanDay, restoreSet, tickSet, untickSet } from '../../db/sessions'
+import { getSetting, setSetting } from '../../db/settings'
+import { REST_SECONDS, bestScores, setScore } from '../../domain/records'
 import type { DayRecord, Exercise, WorkoutPlan, WorkoutSet } from '../../db/types'
 import { weekday, type LocalDate } from '../../domain/date'
 import {
@@ -97,14 +99,31 @@ export function SessionCard({ date, plan, day, exercises, sets, history }: Sessi
       : en.session.otherDay(weekdayName(activeWeekday))
 
   const tick = async (item: Editing, values: SetValues) => {
+    const now = nowMs()
+    const setValues = valuesFor(item.type, values)
     const { id, before } = await tickSet({
       exerciseId: item.planned.exerciseId,
       setNumber: item.setNumber,
-      values: valuesFor(item.type, values),
-      now: nowMs(),
+      values: setValues,
+      now,
     })
+    // Rest starts with every tick (plan §6); the bar keeps time from this start.
+    const seconds = await getSetting('restSeconds', REST_SECONDS.default)
+    await setSetting('restTimer', { startedAt: now, seconds })
+    // A record beats every earlier day's best for this exercise (plan §7).
+    const earlier = history.filter((s) => s.exerciseId === item.planned.exerciseId && s.date < date)
+    const best = bestScores(earlier, () => item.type).get(item.planned.exerciseId)
+    const score = setScore(item.type, {
+      date,
+      exerciseId: item.planned.exerciseId,
+      done: true,
+      ...setValues,
+    })
+    const record = best !== undefined && score > best.value
     toast.show({
-      message: en.session.ticked(item.setNumber, item.name),
+      message: record
+        ? en.session.tickedRecord(item.setNumber, item.name)
+        : en.session.ticked(item.setNumber, item.name),
       action: { label: en.common.undo, onAction: () => void restoreSet(id, before) },
     })
   }

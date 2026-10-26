@@ -12,6 +12,7 @@ import { weekday } from '../../domain/date'
 import { WEEKDAYS } from '../../domain/workout'
 import { Card, EmptyState, buttonClass, cx } from '../../ui'
 import { weekdayName } from './format'
+import { RestTimerBar } from './RestTimerBar'
 import { SessionCard } from './SessionCard'
 
 /** Train: the week at a glance and today's planned exercises (plan §10). */
@@ -92,6 +93,7 @@ export function TrainScreen() {
         </Card>
 
         {examPlanInUse && <p className="text-sm font-semibold text-int">{en.exams.trainNote}</p>}
+        <RestTimerBar />
         <SessionCard
           date={data.date}
           plan={plan}

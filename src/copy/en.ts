@@ -357,6 +357,28 @@ export const en = {
     pickDayHint: 'Today becomes a training day with that day’s sets.',
     dayOption: (day: string, count: string) => `${day} · ${count}`,
     allDone: 'All sets done. Great work.',
+    record: (name: string) => `New personal record on ${name}! +25 STR`,
+    tickedRecord: (n: number, name: string) =>
+      `Set ${n} of ${name} done. New personal record! +25 STR`,
+  },
+  rest: {
+    label: 'Rest',
+    left: (time: string) => `Rest ${time}`,
+    done: 'Rest’s over. Next set!',
+    more: '+15 s',
+    skip: 'Skip',
+    dismiss: 'Dismiss',
+    setting: 'Rest between sets',
+    settingHint: 'A rest timer starts each time you tick a set.',
+  },
+  records: {
+    title: 'Personal records',
+    none: 'Records show up once you beat an earlier session.',
+    count: (n: number) => (n === 1 ? '1 record so far' : `${n} records so far`),
+    e1rm: (kg: string) => `≈${kg} kg 1-rep max`,
+    reps: (n: number) => `${n} reps`,
+    seconds: (n: number) => `${n} s`,
+    on: (value: string, day: string) => `${value}, ${day}`,
   },
   plan: {
     title: 'Workout plan',

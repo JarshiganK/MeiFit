@@ -6,6 +6,8 @@ import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { en } from '../../copy/en'
 import { getProfile } from '../../db/profile'
+import { getSetting, setSetting } from '../../db/settings'
+import { REST_SECONDS } from '../../domain/records'
 import type { Exercise } from '../../db/types'
 import {
   addExercise,
@@ -57,6 +59,7 @@ export function PlanEditorScreen() {
       plan: await getPlan(kind),
       exercises: await allExercises(),
       goal: (await getProfile())?.workoutsPerWeek ?? DEFAULT_ROUTINE.workoutsPerWeek,
+      restSeconds: await getSetting('restSeconds', REST_SECONDS.default),
     }),
     [kind],
   )
@@ -122,6 +125,19 @@ export function PlanEditorScreen() {
               )
             })}
           </ul>
+        </Card>
+
+        <Card>
+          <NumberStepper
+            label={en.rest.setting}
+            hint={en.rest.settingHint}
+            value={data.restSeconds}
+            onChange={(seconds) => void setSetting('restSeconds', seconds)}
+            min={REST_SECONDS.min}
+            max={REST_SECONDS.max}
+            step={REST_SECONDS.step}
+            unit="s"
+          />
         </Card>
 
         {plan.days.map((day) => {

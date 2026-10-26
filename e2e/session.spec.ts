@@ -70,7 +70,10 @@ for (const theme of ['dark', 'light'] as ThemeName[]) {
     await page.goto('/train')
     const squat = page.getByRole('region', { name: 'Squat' })
     await squat.getByRole('button', { name: 'Set 1 of Squat done' }).click()
-    await page.getByRole('button', { name: 'Dismiss' }).click()
+    await expect(page.getByRole('region', { name: 'Rest' }).getByRole('timer')).toHaveText(
+      'Rest 01:30',
+    )
+    await page.getByRole('status').getByRole('button', { name: 'Dismiss' }).click()
     await expectNoSeriousA11yIssues(page)
     await squat.getByRole('button', { name: /^Change set 2 of Squat/ }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
