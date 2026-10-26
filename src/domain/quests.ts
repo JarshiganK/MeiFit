@@ -62,7 +62,17 @@ export interface QuestResult {
 }
 
 export interface QuestHistory {
-  profile: { setupDate: LocalDate; birthDate: LocalDate; sleepTargetMin: number; blockMin: number }
+  profile: {
+    setupDate: LocalDate
+    birthDate: LocalDate
+    sleepTargetMin: number
+    blockMin: number
+    /** The weekly boss needs these; histories read from the database always have them. */
+    goal?: 'lose' | 'maintain' | 'gain'
+    goalWeightKg?: number | undefined
+    workoutsPerWeek?: number
+    studyGoalHours?: number
+  }
   /** Target rows, any order. */
   targets: readonly { startsOn: LocalDate; kcal: number; proteinQuestThresholdG: number | null }[]
   days: readonly {
@@ -78,7 +88,7 @@ export interface QuestHistory {
   sets: readonly (RecordSet & { setNumber: number })[]
   /** The current normal plan, used for days saved before planned sets were. */
   plan: PlanShape | undefined
-  weighIns: readonly { date: LocalDate }[]
+  weighIns: readonly { date: LocalDate; weightKg?: number | undefined }[]
   exports: readonly { date: LocalDate }[]
   /** Waist measurements (plan §7: every 2 weeks). */
   waists: readonly { date: LocalDate }[]
