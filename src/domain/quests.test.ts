@@ -7,6 +7,7 @@ import {
   questsForDay,
   totalXp,
   weeklyQuests,
+  xpBreakdown,
   type QuestHistory,
   type QuestId,
   type QuestResult,
@@ -321,5 +322,31 @@ describe('fitness check and waist XP (plan §4, §7)', () => {
     })
     // 09-25 starts the chain (before setup: no XP); 10-10 is 13+ days on; 10-20 is too soon.
     expect(bonusXp(h, '2026-10-31')).toBe(15)
+  })
+})
+
+describe('xpBreakdown', () => {
+  it('splits XP by stat, with weekly and waist XP as plain XP', () => {
+    const h = history({
+      profile: {
+        setupDate: '2026-10-19',
+        birthDate: '2001-10-25',
+        sleepTargetMin: 420,
+        blockMin: 50,
+      },
+      sleeps: [{ wakeDate: '2026-10-20', minutes: 480 }],
+      study: [{ date: '2026-10-20', minutes: 50, completed: true, source: 'timer' }],
+      exports: [{ date: '2026-10-21' }],
+      waists: [{ date: '2026-10-22' }],
+      checks: [{ date: '2026-10-24', pushups: 20 }],
+    })
+    expect(xpBreakdown(h, '2026-10-26')).toEqual({
+      vit: 20 + 50,
+      int: 30,
+      str: 0,
+      plain: 15 + 15,
+      total: 130,
+    })
+    expect(xpBreakdown(h, '2026-10-18').total).toBe(0)
   })
 })

@@ -346,15 +346,27 @@ function waistQuest(history: QuestHistory, date: LocalDate, week: Set<LocalDate>
 
 /** XP from waist measurements and fitness checks, credited on their own dates, up to `today`. */
 export function bonusXp(history: QuestHistory, today: LocalDate): number {
+  const { vit, str, plain } = bonusBreakdown(history, today)
+  return vit + str + plain
+}
+
+function bonusBreakdown(
+  history: QuestHistory,
+  today: LocalDate,
+): { vit: number; str: number; plain: number } {
   const waist = creditedWaistDates(history.waists.map((w) => w.date)).filter(
     (d) => d >= history.profile.setupDate && d <= today,
   ).length
   const checks = [...history.checks].sort((a, b) => a.date.localeCompare(b.date))
-  let fitness = 0
+  let vit = 0
+  let str = 0
   checks.forEach((check, i) => {
-    if (check.date <= today) fitness += checkRewards(check, checks[i - 1]).xp
+    if (check.date > today) return
+    const reward = checkRewards(check, checks[i - 1])
+    vit += reward.vit
+    str += reward.str
   })
-  return waist * QUEST_XP.waist + fitness
+  return { vit, str, plain: waist * QUEST_XP.waist }
 }
 
 /**
@@ -363,15 +375,35 @@ export function bonusXp(history: QuestHistory, today: LocalDate): number {
  * to its Sunday (approved default).
  */
 export function totalXp(history: QuestHistory, today: LocalDate): number {
-  const index = indexHistory(history)
+  return xpBreakdown(history, today).total
+}
+
+/** XP by stat; weekly quests and the waist quest earn plain XP. */
+export interface XpBreakdown {
+  total: number
+  str: number
+  vit: number
+  int: number
+  plain: number
+}
+
+export function xpBreakdown(history: QuestHistory, today: LocalDate): XpBreakdown {
+  const result: XpBreakdown = { total: 0, str: 0, vit: 0, int: 0, plain: 0 }
   const start = history.profile.setupDate
-  if (start > today) return 0
-  let xp = 0
-  for (const date of datesInRange(start, today)) xp += dayXp(questsForDay(index, date))
+  if (start > today) return result
+  const index = indexHistory(history)
+  for (const date of datesInRange(start, today)) {
+    for (const quest of questsForDay(index, date)) result[quest.stat] += quest.xp
+  }
   for (let monday = weekStart(start); addDays(monday, 6) < today; monday = addDays(monday, 7)) {
-    xp += weeklyQuests(history, monday)
+    result.plain += weeklyQuests(history, monday)
       .filter((q) => q.id !== 'waist')
       .reduce((sum, q) => sum + q.xp, 0)
   }
-  return xp + bonusXp(history, today)
+  const bonus = bonusBreakdown(history, today)
+  result.vit += bonus.vit
+  result.str += bonus.str
+  result.plain += bonus.plain
+  result.total = result.str + result.vit + result.int + result.plain
+  return result
 }
