@@ -1,0 +1,326 @@
+/**
+ * Daily and weekly quests and total XP (plan §7, §9). Nothing here is
+ * stored: every result is worked out from the logs, so correcting a log
+ * corrects the XP, and days logged before the quest board existed get credit.
+ *
+ * Phase 1 (owner answer A): no exam-mode multiplier, streaks or stats yet.
+ */
+import { hasAllMainMeals, calibrationStatus } from './calibration'
+import { ageOn, addDays, datesInRange, weekDates, weekStart, type LocalDate } from './date'
+import { flexBudget } from './flex'
+import { dayTotals, type LoggedMeal } from './food'
+import { mainSleep, meetsSleepTarget } from './sleep'
+import { blocksOn, type LoggedSession } from './study'
+import { meetsWorkoutQuest, plannedSetsDone } from './session'
+import { dayRule, planDayFor, type PlanShape } from './workout'
+import { ADULT_AGE } from './targets'
+
+export type QuestId =
+  'proteinBreakfast' | 'lunchProteins' | 'dinner' | 'dailyProtein' | 'workout' | 'study' | 'sleep'
+
+export type QuestStat = 'str' | 'vit' | 'int'
+
+export const QUEST_XP = {
+  proteinBreakfast: 10,
+  lunchProteins: 10,
+  dinner: 10,
+  dailyProtein: 20,
+  workout: 50,
+  restDay: 10,
+  studyBlock: 30,
+  sleep: 20,
+  weighIns: 20,
+  backup: 15,
+} as const
+
+export const WEEKLY_WEIGH_INS = 3
+
+export interface QuestResult {
+  id: QuestId
+  stat: QuestStat
+  done: boolean
+  xp: number
+  maxXp: number
+  /** False when the quest can't be done yet (e.g. no workout plan). */
+  available: boolean
+  /** How far along it is, for the board. */
+  progress: { value: number; max: number }
+  /** Which version of the quest applies today. */
+  variant?: 'flexDinner' | 'calibration' | 'threshold' | 'restDay' | 'training' | 'noPlan'
+}
+
+export interface QuestHistory {
+  profile: { setupDate: LocalDate; birthDate: LocalDate; sleepTargetMin: number; blockMin: number }
+  /** Target rows, any order. */
+  targets: readonly { startsOn: LocalDate; kcal: number; proteinQuestThresholdG: number | null }[]
+  days: readonly {
+    date: LocalDate
+    isFlexDay: boolean
+    isPlannedRest: boolean
+    plannedSets?: number
+    planWeekday?: number
+  }[]
+  meals: readonly (LoggedMeal & { date: LocalDate })[]
+  sleeps: readonly { wakeDate: LocalDate; minutes: number }[]
+  study: readonly LoggedSession[]
+  sets: readonly { date: LocalDate; exerciseId: number; setNumber: number; done: boolean }[]
+  /** The current normal plan, used for days saved before planned sets were. */
+  plan: PlanShape | undefined
+  weighIns: readonly { date: LocalDate }[]
+  exports: readonly { date: LocalDate }[]
+}
+
+function groupBy<T>(items: readonly T[], key: (item: T) => LocalDate): Map<LocalDate, T[]> {
+  const map = new Map<LocalDate, T[]>()
+  for (const item of items) {
+    const k = key(item)
+    const list = map.get(k)
+    if (list) list.push(item)
+    else map.set(k, [item])
+  }
+  return map
+}
+
+/** History indexed by date, so a year of days stays fast. */
+export interface IndexedHistory {
+  source: QuestHistory
+  targets: QuestHistory['targets']
+  days: Map<LocalDate, QuestHistory['days'][number]>
+  meals: Map<LocalDate, QuestHistory['meals'][number][]>
+  sleeps: Map<LocalDate, QuestHistory['sleeps'][number][]>
+  study: Map<LocalDate, LoggedSession[]>
+  sets: Map<LocalDate, QuestHistory['sets'][number][]>
+}
+
+export function indexHistory(history: QuestHistory): IndexedHistory {
+  return {
+    source: history,
+    targets: [...history.targets].sort((a, b) => a.startsOn.localeCompare(b.startsOn)),
+    days: new Map(history.days.map((d) => [d.date, d])),
+    meals: groupBy(history.meals, (m) => m.date),
+    sleeps: groupBy(history.sleeps, (s) => s.wakeDate),
+    study: groupBy(history.study, (s) => s.date),
+    sets: groupBy(history.sets, (s) => s.date),
+  }
+}
+
+function targetOn(index: IndexedHistory, date: LocalDate) {
+  let current: IndexedHistory['targets'][number] | undefined
+  for (const t of index.targets) if (t.startsOn <= date) current = t
+  return current
+}
+
+function quest(
+  id: QuestId,
+  stat: QuestStat,
+  done: boolean,
+  maxXp: number,
+  progress: { value: number; max: number },
+  extra: Partial<QuestResult> = {},
+): QuestResult {
+  return { id, stat, done, xp: done ? maxXp : 0, maxXp, available: true, progress, ...extra }
+}
+
+/** The seven daily quests for one date. */
+export function questsForDay(index: IndexedHistory, date: LocalDate): QuestResult[] {
+  const { profile } = index.source
+  const meals = index.meals.get(date) ?? []
+  const totals = dayTotals(meals)
+  const target = targetOn(index, date)
+  const day = index.days.get(date)
+  const isMinor = ageOn(profile.birthDate, date) < ADULT_AGE
+  const xp = QUEST_XP
+
+  // Dinner: two proteins, or on a flex day dinner within the budget. Always two proteins for under-18s.
+  const flexDinner = Boolean(day?.isFlexDay) && !isMinor && target !== undefined
+  const flex = flexDinner && target ? flexBudget(target.kcal, meals) : null
+  const dinner = flex
+    ? quest(
+        'dinner',
+        'vit',
+        flex.withinBudget,
+        xp.dinner,
+        {
+          value: Math.min(flex.dinnerKcal, flex.budget),
+          max: flex.budget,
+        },
+        { variant: 'flexDinner' },
+      )
+    : quest('dinner', 'vit', totals.bySlot.dinner.proteinItems >= 2, xp.dinner, {
+        value: Math.min(totals.bySlot.dinner.proteinItems, 2),
+        max: 2,
+      })
+
+  // Daily protein: in the first 14 days, or until a threshold is set, log all three main meals.
+  const threshold = target?.proteinQuestThresholdG ?? null
+  const calibrating = calibrationStatus(profile.setupDate, date).calibrating || threshold === null
+  const mainMeals = (['breakfast', 'lunch', 'dinner'] as const).filter(
+    (slot) => totals.bySlot[slot].itemCount > 0,
+  ).length
+  const dailyProtein = calibrating
+    ? quest(
+        'dailyProtein',
+        'vit',
+        hasAllMainMeals(meals),
+        xp.dailyProtein,
+        {
+          value: mainMeals,
+          max: 3,
+        },
+        { variant: 'calibration' },
+      )
+    : quest(
+        'dailyProtein',
+        'vit',
+        totals.proteinG >= (threshold ?? 0),
+        xp.dailyProtein,
+        {
+          value: Math.min(totals.proteinG, threshold ?? 0),
+          max: threshold ?? 0,
+        },
+        { variant: 'threshold' },
+      )
+
+  // Workout: 80% of the planned sets; a planned rest day earns 10.
+  const rule = day ?? { ...dayRule(index.source.plan, date), planWeekday: undefined }
+  const sets = index.sets.get(date) ?? []
+  const planned = rule.plannedSets ?? 0
+  let workout: QuestResult
+  if (rule.isPlannedRest && rule.planWeekday === undefined) {
+    workout = quest(
+      'workout',
+      'str',
+      true,
+      xp.restDay,
+      { value: 1, max: 1 },
+      { variant: 'restDay' },
+    )
+  } else if (planned > 0) {
+    const planDay =
+      rule.planWeekday !== undefined
+        ? index.source.plan?.days.find((d) => d.weekday === rule.planWeekday)
+        : planDayFor(index.source.plan, date)
+    const doneSets = Math.min(
+      planned,
+      planDay ? plannedSetsDone(planDay.exercises, sets) : sets.filter((s) => s.done).length,
+    )
+    workout = quest(
+      'workout',
+      'str',
+      meetsWorkoutQuest(planned, doneSets),
+      xp.workout,
+      {
+        value: doneSets,
+        max: planned,
+      },
+      { variant: 'training' },
+    )
+  } else {
+    workout = {
+      ...quest('workout', 'str', false, xp.workout, { value: 0, max: 0 }),
+      available: false,
+      variant: 'noPlan',
+    }
+  }
+
+  // Study: 30 INT per block, up to 5.
+  const blocks = blocksOn(date, index.study.get(date) ?? [], profile.blockMin)
+  const study: QuestResult = {
+    id: 'study',
+    stat: 'int',
+    done: blocks > 0,
+    xp: blocks * xp.studyBlock,
+    maxXp: 5 * xp.studyBlock,
+    available: true,
+    progress: { value: blocks, max: 5 },
+  }
+
+  // Sleep: the main sleep that ended today meets the target.
+  const sleepMin = mainSleep(index.sleeps.get(date) ?? [])?.minutes
+  const sleep = quest(
+    'sleep',
+    'vit',
+    meetsSleepTarget(sleepMin, profile.sleepTargetMin),
+    xp.sleep,
+    {
+      value: Math.min(sleepMin ?? 0, profile.sleepTargetMin),
+      max: profile.sleepTargetMin,
+    },
+  )
+
+  return [
+    quest(
+      'proteinBreakfast',
+      'vit',
+      totals.bySlot.breakfast.proteinItems >= 1,
+      xp.proteinBreakfast,
+      {
+        value: Math.min(totals.bySlot.breakfast.proteinItems, 1),
+        max: 1,
+      },
+    ),
+    quest('lunchProteins', 'vit', totals.bySlot.lunch.proteinItems >= 2, xp.lunchProteins, {
+      value: Math.min(totals.bySlot.lunch.proteinItems, 2),
+      max: 2,
+    }),
+    dinner,
+    dailyProtein,
+    workout,
+    study,
+    sleep,
+  ]
+}
+
+export function dayXp(quests: readonly QuestResult[]): number {
+  return quests.reduce((sum, q) => sum + q.xp, 0)
+}
+
+export type WeeklyQuestId = 'weighIns' | 'backup'
+
+export interface WeeklyResult {
+  id: WeeklyQuestId
+  done: boolean
+  xp: number
+  maxXp: number
+  progress: { value: number; max: number }
+}
+
+/** The weekly quests for the Monday–Sunday week containing `date`. */
+export function weeklyQuests(history: QuestHistory, date: LocalDate): WeeklyResult[] {
+  const week = new Set(weekDates(date))
+  const weighIns = new Set(history.weighIns.filter((w) => week.has(w.date)).map((w) => w.date)).size
+  const backups = history.exports.filter((e) => week.has(e.date)).length
+  return [
+    {
+      id: 'weighIns',
+      done: weighIns >= WEEKLY_WEIGH_INS,
+      xp: weighIns >= WEEKLY_WEIGH_INS ? QUEST_XP.weighIns : 0,
+      maxXp: QUEST_XP.weighIns,
+      progress: { value: Math.min(weighIns, WEEKLY_WEIGH_INS), max: WEEKLY_WEIGH_INS },
+    },
+    {
+      id: 'backup',
+      done: backups > 0,
+      xp: backups > 0 ? QUEST_XP.backup : 0,
+      maxXp: QUEST_XP.backup,
+      progress: { value: Math.min(backups, 1), max: 1 },
+    },
+  ]
+}
+
+/**
+ * Total XP from the setup date to today. Daily quests count as they're done,
+ * including today. Weekly quests are credited once their week has finished,
+ * to its Sunday (approved default).
+ */
+export function totalXp(history: QuestHistory, today: LocalDate): number {
+  const index = indexHistory(history)
+  const start = history.profile.setupDate
+  if (start > today) return 0
+  let xp = 0
+  for (const date of datesInRange(start, today)) xp += dayXp(questsForDay(index, date))
+  for (let monday = weekStart(start); addDays(monday, 6) < today; monday = addDays(monday, 7)) {
+    xp += weeklyQuests(history, monday).reduce((sum, q) => sum + q.xp, 0)
+  }
+  return xp
+}
