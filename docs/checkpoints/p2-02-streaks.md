@@ -29,8 +29,8 @@ Test change explained: the first-visit level test now waits for the stored level
 
 ## 4. Commits
 
-- Add streak and shield rules
-- Show the streak and shields on Status
+- `d1e4a11` Add streak and shield rules
+- `bad1c2d` Show the streak and shields on Status
 - The next commit adds this report and the decision log.
 
 ## 5. Decisions, questions and tasks for me

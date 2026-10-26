@@ -27,7 +27,7 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 | ------------- | --------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Setup         | First-launch setup, target calculation, Profile in Settings           | 1      | done                                                                                                                                                                        | `src/domain/targets.ts`, `src/domain/setup.ts`, `src/features/setup/`, `src/db/profile.ts`, `src/features/settings/ProfileScreen.tsx` |
 | Game core     | Daily quest board, XP and levels                                      | 1      | done                                                                                                                                                                        | `src/domain/quests.ts`, `src/domain/levels.ts`, `src/features/status/`                                                                |
-| Game core     | STR / VIT / INT stats, E–S ranks                                      | 2 Must | todo (stat colours and badges ready)                                                                                                                                        | `src/ui/StatBadge.tsx`                                                                                                                |
+| Game core     | STR / VIT / INT stats, E–S ranks                                      | 2 Must | done                                                                                                                                                                        | `src/domain/stats.ts`, `src/features/status/LevelCard.tsx`                                                                            |
 | Game core     | Streaks with streak shields, exam mode, weekly boss                   | 2 Must | in progress: streaks and shields done; exam mode and weekly boss next                                                                                                       | `src/domain/streak.ts`, `src/features/status/StreakCard.tsx`                                                                          |
 | Game core     | Achievements                                                          | 2 Nice | todo                                                                                                                                                                        |                                                                                                                                       |
 | Diet          | Starter menu and menu editor                                          | 1      | done                                                                                                                                                                        | `src/db/seed/starterMenu.ts`, `src/features/settings/MenuEditorScreen.tsx`, `src/db/food.ts`                                          |
@@ -72,8 +72,8 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 
 1. Fitness checks and waist log: **done** (`src/domain/fitness.ts`, `src/features/fitness/`)
 2. Streaks and shields: **done** (`src/domain/streak.ts`, `src/features/status/StreakCard.tsx`)
-3. Stats and ranks: **next**
-4. Exam calendar, exam mode and exam workout plan
+3. Stats and ranks: **done** (`src/domain/stats.ts`)
+4. Exam calendar, exam mode and exam workout plan: **next**
 5. Rest timer and PR detection
 6. Weekly report and boss
 7. Shortcuts reminders

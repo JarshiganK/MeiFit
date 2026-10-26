@@ -294,3 +294,10 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Today** only adds to the streak once it counts; it can't break the streak before midnight (plan §5).
 - **Worked out from the logs** every time (`src/domain/streak.ts`), walking from the setup date. Nothing is stored, so correcting a past log can repair or break a past streak, as the plan intends.
 - **Status card:** flame icon with "N-day streak", "Today: x of 5 quests to keep it going", two shield icons with "n of 2 shields", the best streak when it's longer than the current one, and which day a shield last covered.
+
+## 2026-10-26: Phase 2 Must 3 (stats and ranks)
+
+- **Stat XP:** each daily quest's XP goes to its stat (STR, VIT or INT). A fitness check adds its 50 VIT and its STR bonus. Weekly quests and the waist quest are plain XP: they add to the level but no stat. `xpBreakdown` in `src/domain/quests.ts` is the single sum used for both.
+- **Stat levels** use the same curve as the overall level, on XP scaled so a typical week moves each stat about the same (plan §7). Typical weeks are set in `TYPICAL_WEEK_XP` (STR 190: 3 workouts and 4 rest days; VIT 420; INT 420: about 2 blocks a day). VIT is the reference, so STR counts about 2.2× and INT 1×. These constants are the place to tune after 2 weeks of real data (in `docs/QUESTIONS.md`).
+- **Ranks** by overall level, as in plan §7: E 1–9, D 10–19, C 20–34, B 35–49, A 50–69, S 70+. The card shows the rank and where the next one starts.
+- **Display:** the level card shows "Rank E", the next rank, total XP, and three stat columns. Each column has its icon, label, "Lv n" and a bar in the stat's colour; the bar's accessible name is "Strength Lv 1" (never colour alone).
