@@ -33,7 +33,11 @@ import {
 export const BACKUP_APP = 'daily-quest'
 
 /** Settings that belong to this phone only: never exported or fingerprinted. */
-export const DEVICE_ONLY_SETTINGS: readonly SettingKey[] = ['geminiKey', 'setupDraft']
+export const DEVICE_ONLY_SETTINGS: readonly SettingKey[] = [
+  'geminiKey',
+  'setupDraft',
+  'fitnessDraft',
+]
 
 /** Device-only settings an import keeps. A half-finished setup ends with the import. */
 const KEPT_ON_RESTORE: readonly SettingKey[] = ['geminiKey']

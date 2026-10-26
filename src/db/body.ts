@@ -53,3 +53,26 @@ export async function restoreBodyLog(date: LocalDate, before: BodyLog | undefine
     if (before) await db.bodyLogs.put(before)
   })
 }
+
+/** Saves the day's waist, replacing an earlier one that day. Returns the row as it was, for Undo. */
+export async function saveWaist(
+  date: LocalDate,
+  at: number,
+  waistCm: number,
+): Promise<BodyLog | undefined> {
+  return db.transaction('rw', db.bodyLogs, async () => {
+    const existing = await db.bodyLogs.where('date').equals(date).first()
+    const cm = Math.round(waistCm * 10) / 10
+    if (existing?.id !== undefined) await db.bodyLogs.update(existing.id, { waistCm: cm })
+    else await db.bodyLogs.add({ date, at, waistCm: cm })
+    return existing
+  })
+}
+
+/** Every waist measurement, oldest first. */
+export async function allWaists(): Promise<{ date: LocalDate; waistCm: number }[]> {
+  const rows = await db.bodyLogs.orderBy('date').toArray()
+  return rows.flatMap((row) =>
+    row.waistCm === undefined ? [] : [{ date: row.date, waistCm: row.waistCm }],
+  )
+}

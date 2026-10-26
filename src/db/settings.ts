@@ -15,6 +15,10 @@ export interface SettingsMap {
   openSleep: number
   /** The running focus timer, if any (plan §12: it keeps its start time). */
   focusTimer: FocusTimer | null
+  /** Up to 3 main lifts (exercise ids) tracked at fitness checks. */
+  fitnessLifts: number[]
+  /** A fitness check in progress, so it resumes after iOS closes the app. */
+  fitnessDraft: unknown
 }
 
 export type SettingKey = keyof SettingsMap

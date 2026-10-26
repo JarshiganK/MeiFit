@@ -25,7 +25,8 @@ describe('loadQuestHistory', () => {
     expect(history?.sleeps.map((s) => s.wakeDate)).toEqual(['2026-10-02'])
     expect(history?.weighIns).toHaveLength(1)
     expect(history?.plan).toBeUndefined()
-    // One sleep quest (20 XP) on the 2nd.
-    expect(totalXp(history!, '2026-10-02')).toBe(20)
+    expect(history?.waists).toHaveLength(1)
+    // One sleep quest (20 XP) and a waist measurement (15 XP) on the 2nd.
+    expect(totalXp(history!, '2026-10-02')).toBe(35)
   })
 })
