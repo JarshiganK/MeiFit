@@ -105,6 +105,15 @@ export const en = {
     todayCounts: 'Today counts. Nice work.',
     saved: (day: string) => `A shield covered ${day}.`,
   },
+  mood: {
+    title: 'How are you today?',
+    hint: 'One tap each. +5 XP once a day.',
+    energy: 'Energy',
+    energyHint: '1 is drained, 5 is full of energy.',
+    mood: 'Mood',
+    moodHint: '1 is low, 5 is great.',
+    saved: 'Checked in for today. Thanks.',
+  },
   sleep: {
     title: 'Sleep',
     goingToSleep: 'Going to sleep',

@@ -26,6 +26,7 @@ import { FlexDaySwitch } from '../food/FlexDaySwitch'
 import { portionLabel } from '../food/format'
 import { LevelCard } from './LevelCard'
 import { QuestBoard } from './QuestBoard'
+import { MoodCard } from './MoodCard'
 import { SleepCard } from './SleepCard'
 import { StreakCard } from './StreakCard'
 
@@ -100,6 +101,7 @@ export function StatusScreen() {
           boss={bossFor(history, weekStart(today))}
         />
         <SleepCard />
+        {!examPeriod && <MoodCard today={today} />}
         <DrinkButtons
           foods={data.foods}
           drinkLogs={data.drinks}
