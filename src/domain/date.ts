@@ -151,3 +151,21 @@ export function fromDateTimeInput(value: string): number | undefined {
 export function formatTime(instant: number): string {
   return dayjs(instant).format('HH:mm')
 }
+
+const IMPORT_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/
+
+/**
+ * Reads a date-time from a Shortcut (ISO 8601): "2026-10-25T13:05",
+ * optionally with seconds and an offset. Without an offset it's local time.
+ */
+export function parseImportInstant(text: string): number | undefined {
+  const value = text.trim()
+  if (!IMPORT_INSTANT.test(value)) return undefined
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return undefined
+  // Day.js rolls impossible dates over (30 Feb → 2 Mar); refuse those.
+  const datePart = value.slice(0, 10)
+  const hasOffset = /(Z|[+-]\d{2}:?\d{2})$/.test(value)
+  if (!hasOffset && parsed.format('YYYY-MM-DD') !== datePart) return undefined
+  return parsed.valueOf()
+}
