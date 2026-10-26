@@ -366,3 +366,10 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 ## 2026-10-26: Phase 2 Nice 2 (hours per subject)
 
 - Study's "This week" card lists the week's hours per subject, most first, with sessions without a subject grouped as "No subject". It shows only when at least one session has a subject. Timer and hand-entered sessions both count, partial ones included, matching the weekly total above it.
+
+## 2026-10-26: Phase 2 Nice 3 (achievements)
+
+- **The five ideas from plan §7, with those names:** Iron Week (a 7-day streak, judged on the best streak), Protein Hunter (30 days at or above the protein threshold; calibration days don't count), Scholar (100 study blocks), PR Breaker (10 personal records) and Checkpoint (3 fitness checks).
+- **Worked out from the logs** like XP. Correcting a log can lock one again.
+- **No extra XP:** the plan gives none for achievements.
+- **Display:** Progress shows each one with its description and a progress bar ("12 of 30"), or an award icon and "Unlocked". Visuals are original (lucide icons and the app's tokens).
