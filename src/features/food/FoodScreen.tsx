@@ -33,6 +33,7 @@ import { DayLog } from './DayLog'
 import { DrinkButtons } from './DrinkButtons'
 import { approxKcal, portionLabel } from './format'
 import { MenuGrid } from './MenuGrid'
+import { PhotoMeal } from './PhotoMeal'
 import { PortionPicker } from './PortionPicker'
 import { ProteinProposal } from './ProteinProposal'
 import { TotalsCard } from './TotalsCard'
@@ -217,6 +218,7 @@ export function FoodScreen() {
               >
                 {en.food.custom}
               </Button>
+              <PhotoMeal menu={day.foods.filter((f) => !f.archived)} />
               <Link to="/settings/menu" className={cx(buttonClass({ variant: 'ghost' }))}>
                 {en.food.editMenu}
               </Link>

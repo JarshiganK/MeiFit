@@ -5,6 +5,8 @@ import { db } from './db'
 /** Every setting and its type. Add keys here as features need them. */
 export interface SettingsMap {
   debug: boolean
+  /** Photo meal recognition with the user's own Gemini key (plan §11). Off by default. */
+  geminiEnabled: boolean
   geminiKey: string
   geminiModel: string
   fitnessCheckIntervalWeeks: number

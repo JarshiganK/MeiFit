@@ -12,7 +12,7 @@ Your theme choice is kept in your browser’s local storage on this device.
 
 Nothing, by default. The app makes no network requests except to download its own updates.
 
-The one exception is optional and off by default. Photo meal recognition (coming in a later version) will only work if you turn it on and add your own Google Gemini API key. Then the app sends food photos, shrunk to about 800 px wide, and your menu item names to Google’s Gemini API. Nothing else is sent. On Gemini’s free tier, Google may use what you send to improve its models. Your API key stays on this device and is never included in backups.
+The one exception is optional and off by default. Photo meal recognition with Gemini only works if you turn it on in Settings and add your own Google Gemini API key. Then the app sends food photos, shrunk to about 800 px wide, and your menu item names to Google’s Gemini API. Nothing else is sent. On Gemini’s free tier, Google may use what you send to improve its models. Your API key stays on this device and is never included in backups.
 
 ## Export or delete everything
 

@@ -23,6 +23,7 @@ import { getSetting, setSetting } from '../../db/settings'
 import { DEFAULT_INTERVAL_WEEKS } from '../../domain/fitness'
 import { Card, SegmentedControl, Switch } from '../../ui'
 import { DataCard } from './DataCard'
+import { GeminiCard } from './GeminiCard'
 
 const THEME_OPTIONS: { value: ThemePref; label: string; icon: ReactNode }[] = [
   { value: 'system', label: en.settings.themeSystem, icon: <Monitor size={16} /> },
@@ -92,6 +93,8 @@ export function SettingsScreen() {
         </Card>
 
         <DataCard />
+
+        <GeminiCard />
 
         <Card title={en.fitness.history.title}>
           <SegmentedControl

@@ -866,7 +866,7 @@ export const en = {
         title: 'What’s sent',
         paragraphs: [
           'Nothing, by default. The app makes no network requests except to download its own updates.',
-          'The one exception is optional and off by default. Photo meal recognition (coming in a later version) will only work if you turn it on and add your own Google Gemini API key. Then the app sends food photos, shrunk to about 800 px wide, and your menu item names to Google’s Gemini API. Nothing else is sent. On Gemini’s free tier, Google may use what you send to improve its models. Your API key stays on this device and is never included in backups.',
+          'The one exception is optional and off by default. Photo meal recognition with Gemini only works if you turn it on in Settings and add your own Google Gemini API key. Then the app sends food photos, shrunk to about 800 px wide, and your menu item names to Google’s Gemini API. Nothing else is sent. On Gemini’s free tier, Google may use what you send to improve its models. Your API key stays on this device and is never included in backups.',
         ],
       },
       {
@@ -1076,6 +1076,30 @@ export const en = {
     save: 'Save import',
     saved: (n: number) => (n === 1 ? 'Imported 1 item' : `Imported ${n} items`),
     noMatch: 'No match on your menu',
+  },
+  gemini: {
+    title: 'Photo recognition (Gemini)',
+    intro:
+      'Optional backup for Meal Snap. A food photo, shrunk to about 800 px, and your menu names are sent to Google’s Gemini API with your own key. Nothing else is sent. On the free tier, Google may use what you send to improve its models.',
+    enable: 'Use Gemini for food photos',
+    key: 'Gemini API key',
+    keyHint: 'Stays on this phone and is never in a backup. Get one free at Google AI Studio.',
+    model: 'Model name',
+    modelHint: 'Change it if Google retires this model.',
+    modelInvalid: 'Use letters, numbers, dots and dashes only.',
+    keySaved: 'Key saved on this phone',
+    save: 'Save',
+    photo: 'Photo',
+    photoLabel: 'Recognise a meal from a photo',
+    working: 'Asking Gemini…',
+    reviewTitle: 'Check the meal',
+    reviewHint: 'Matches come from your menu; pick another or skip.',
+    add: 'Add meal',
+    added: 'Meal added from the photo',
+    nothingFound:
+      'Gemini didn’t name any foods from your menu. Try another photo, or log by tapping.',
+    offline: 'Photo recognition needs internet. Log by tapping for now.',
+    failed: 'Gemini didn’t answer. Check your key and the model name in Settings.',
   },
   shortcuts: {
     title: 'Shortcut help',
