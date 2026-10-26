@@ -3,7 +3,7 @@
  * session of the same exercise, so most sets are logged with one tap. A
  * workout counts on the day it starts, even if it runs past midnight.
  */
-import { toLocalDate, type LocalDate } from './date'
+import { addDays, datesInRange, toLocalDate, weekday as weekdayOf, type LocalDate } from './date'
 import type { ExerciseType, PlannedExercise } from './workout'
 
 /** Sets logged within this long of the previous one belong to the same session. */
@@ -147,4 +147,37 @@ export function progressionFor(
   const kg = target.targetKg ?? 0
   if (!planned.every((s) => (s.weightKg ?? 0) >= kg)) return undefined
   return { ...target, targetKg: kg + PROGRESSION.kg }
+}
+
+export interface DayRow {
+  date: LocalDate
+  isPlannedRest: boolean
+  plannedSets?: number
+  planWeekday?: number
+}
+
+/**
+ * Training days earlier this week (Monday to yesterday) with no set done and
+ * not made up on a later day, most recent first (plan §6: missed-session
+ * reschedule). The plan weekday is the one to run again.
+ */
+export function missedSessions(
+  today: LocalDate,
+  rows: readonly DayRow[],
+  setDates: ReadonlySet<LocalDate>,
+  ruleFor: (date: LocalDate) => DayRow,
+): { date: LocalDate; planWeekday: number }[] {
+  const monday = addDays(today, 1 - weekdayOf(today))
+  if (monday >= today) return []
+  const days = datesInRange(monday, addDays(today, -1)).map(
+    (date) => rows.find((r) => r.date === date) ?? ruleFor(date),
+  )
+  const madeUp = new Set(
+    rows.filter((r) => r.date >= monday && r.planWeekday !== undefined).map((r) => r.planWeekday),
+  )
+  return days
+    .filter((d) => !d.isPlannedRest && (d.plannedSets ?? 0) > 0 && !setDates.has(d.date))
+    .map((d) => ({ date: d.date, planWeekday: d.planWeekday ?? weekdayOf(d.date) }))
+    .filter((m) => !madeUp.has(m.planWeekday))
+    .reverse()
 }

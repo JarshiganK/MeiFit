@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { atLocalTime } from './date'
+import { dayRule } from './workout'
 import {
   currentSession,
   lastSessionSets,
+  missedSessions,
   meetsWorkoutQuest,
   plannedSetCount,
   plannedSetsDone,
@@ -162,5 +164,38 @@ describe('progression suggestions (plan §6)', () => {
     expect(progressionFor(target, 'seconds', sets)).toEqual({ ...target, seconds: 35 })
     expect(progressionFor({ ...target, seconds: 0 }, 'seconds', sets)).toBeUndefined()
     expect(progressionFor(target, 'seconds', [sets[0]!, done(2, { seconds: 25 })])).toBeUndefined()
+  })
+})
+
+describe('missed sessions (plan §6)', () => {
+  const plan = {
+    days: [1, 3].map((weekday) => ({ weekday, exercises: [{ exerciseId: 1, sets: 3 }] })),
+  }
+  const ruleFor = (date: string) => ({ date, ...dayRule(plan, date) })
+  const today = '2026-10-29' // Thursday
+
+  it('finds training days this week with nothing done, most recent first', () => {
+    expect(missedSessions(today, [], new Set(), ruleFor)).toEqual([
+      { date: '2026-10-28', planWeekday: 3 },
+      { date: '2026-10-26', planWeekday: 1 },
+    ])
+  })
+
+  it('leaves out days that were trained, or made up later', () => {
+    expect(missedSessions(today, [], new Set(['2026-10-26']), ruleFor)).toEqual([
+      { date: '2026-10-28', planWeekday: 3 },
+    ])
+    const madeUp = [{ date: '2026-10-27', isPlannedRest: false, plannedSets: 3, planWeekday: 1 }]
+    expect(missedSessions(today, madeUp, new Set(['2026-10-27']), ruleFor)).toEqual([
+      { date: '2026-10-28', planWeekday: 3 },
+    ])
+  })
+
+  it('uses the saved day rules and looks only at this week', () => {
+    const rows = [{ date: '2026-10-28', isPlannedRest: true }]
+    expect(missedSessions(today, rows, new Set(), ruleFor)).toEqual([
+      { date: '2026-10-26', planWeekday: 1 },
+    ])
+    expect(missedSessions('2026-10-26', [], new Set(), ruleFor)).toEqual([])
   })
 })
