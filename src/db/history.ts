@@ -20,23 +20,38 @@ export async function loadQuestHistory(): Promise<QuestHistory | undefined> {
       db.bodyLogs,
       db.exportLogs,
       db.fitnessChecks,
+      db.examPeriods,
     ],
     async () => {
       const profile = await db.profile.get('me')
       if (!profile) return undefined
-      const [targets, days, meals, sleeps, study, sets, plan, body, exports, checks] =
-        await Promise.all([
-          db.targetHistory.toArray(),
-          db.days.toArray(),
-          db.meals.where('date').aboveOrEqual(profile.setupDate).toArray(),
-          db.sleepLogs.where('wakeDate').aboveOrEqual(profile.setupDate).toArray(),
-          db.studySessions.where('date').aboveOrEqual(profile.setupDate).toArray(),
-          db.workoutSets.where('date').aboveOrEqual(profile.setupDate).toArray(),
-          db.workoutPlans.where('kind').equals('normal').first(),
-          db.bodyLogs.toArray(),
-          db.exportLogs.toArray(),
-          db.fitnessChecks.toArray(),
-        ])
+      const [
+        targets,
+        days,
+        meals,
+        sleeps,
+        study,
+        sets,
+        plan,
+        body,
+        exports,
+        checks,
+        periods,
+        examPlan,
+      ] = await Promise.all([
+        db.targetHistory.toArray(),
+        db.days.toArray(),
+        db.meals.where('date').aboveOrEqual(profile.setupDate).toArray(),
+        db.sleepLogs.where('wakeDate').aboveOrEqual(profile.setupDate).toArray(),
+        db.studySessions.where('date').aboveOrEqual(profile.setupDate).toArray(),
+        db.workoutSets.where('date').aboveOrEqual(profile.setupDate).toArray(),
+        db.workoutPlans.where('kind').equals('normal').first(),
+        db.bodyLogs.toArray(),
+        db.exportLogs.toArray(),
+        db.fitnessChecks.toArray(),
+        db.examPeriods.toArray(),
+        db.workoutPlans.where('kind').equals('exam').first(),
+      ])
       return {
         profile,
         targets,
@@ -50,6 +65,8 @@ export async function loadQuestHistory(): Promise<QuestHistory | undefined> {
         exports,
         waists: body.filter((b) => b.waistCm !== undefined),
         checks,
+        examPeriods: periods,
+        examPlan,
       }
     },
   )

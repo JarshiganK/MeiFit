@@ -3,7 +3,9 @@
  * change at a time, so nothing is lost if iOS closes the app mid-edit.
  */
 import { toLocalDate, type LocalDate } from '../domain/date'
+import { isExamDay } from '../domain/exams'
 import {
+  activePlan,
   dayRule,
   restDaysToWrite,
   sortDays,
@@ -51,24 +53,36 @@ export async function ensurePlan(kind: PlanKind = 'normal'): Promise<WorkoutPlan
 }
 
 /**
- * Applies one change to a plan. Today isn't over, so an edit to the normal
- * plan also updates today's planned-rest flag; past days keep theirs.
+ * The plan that applies on a date: the exam plan in exam mode (if it has
+ * training days), otherwise the normal plan (plan §7). Inside a transaction,
+ * the transaction must include workoutPlans and examPeriods.
+ */
+export async function planOn(date: LocalDate): Promise<WorkoutPlan | undefined> {
+  const [normal, exam, periods] = await Promise.all([
+    db.workoutPlans.where('kind').equals('normal').first(),
+    db.workoutPlans.where('kind').equals('exam').first(),
+    db.examPeriods.toArray(),
+  ])
+  return activePlan(isExamDay(date, periods), normal, exam)
+}
+
+/**
+ * Applies one change to a plan. Today isn't over, so an edit to the plan in
+ * use today also updates today's planned rest and sets; past days keep theirs.
  */
 async function changePlan(planId: number, change: (plan: WorkoutPlan) => WorkoutPlan) {
-  await db.transaction('rw', db.workoutPlans, db.days, async () => {
+  await db.transaction('rw', db.workoutPlans, db.days, db.examPeriods, async () => {
     const plan = await db.workoutPlans.get(planId)
     if (!plan) throw new Error('No such plan')
     const changed = change(plan)
     const next = { ...changed, days: sortDays(changed.days) }
     await db.workoutPlans.put(next)
-    if (next.kind === 'normal') {
-      const today = toLocalDate(Date.now())
-      const row = await db.days.get(today)
-      // A day already switched to another plan day keeps that choice.
-      if (row && row.planWeekday === undefined) {
-        const { isFlexDay, date } = row
-        await db.days.put({ date, isFlexDay, ...dayRule(next, today) })
-      }
+    const today = toLocalDate(Date.now())
+    const row = await db.days.get(today)
+    // A day already switched to another plan day keeps that choice.
+    if (row && row.planWeekday === undefined) {
+      const { isFlexDay, date } = row
+      await db.days.put({ date, isFlexDay, ...dayRule(await planOn(today), today) })
     }
   })
 }
@@ -155,14 +169,19 @@ export async function moveInDay(
  * the current plan (approved default). Run when the app opens.
  */
 export async function recordPlannedRest(today: LocalDate): Promise<void> {
-  await db.transaction('rw', db.days, db.workoutPlans, async () => {
-    const plan = await db.workoutPlans.where('kind').equals('normal').first()
+  await db.transaction('rw', db.days, db.workoutPlans, db.examPeriods, async () => {
+    const [normal, exam, periods] = await Promise.all([
+      db.workoutPlans.where('kind').equals('normal').first(),
+      db.workoutPlans.where('kind').equals('exam').first(),
+      db.examPeriods.toArray(),
+    ])
+    const planFor = (date: LocalDate) => activePlan(isExamDay(date, periods), normal, exam)
     const last = await db.days.orderBy('date').last()
     const recent = await db.days
       .where('date')
       .aboveOrEqual(last?.date ?? today)
       .toArray()
-    const rows = restDaysToWrite(last?.date, today, plan, new Set(recent.map((d) => d.date)))
+    const rows = restDaysToWrite(last?.date, today, planFor, new Set(recent.map((d) => d.date)))
     if (rows.length > 0) await db.days.bulkAdd(rows)
   })
 }

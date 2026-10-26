@@ -38,7 +38,8 @@ export function sampleTables(): SampleTables {
       },
     ],
     days: [{ date: '2026-10-25', isFlexDay: true, isPlannedRest: false }],
-    examPeriods: [{ id: 1, startsOn: '2026-11-20', endsOn: '2026-12-05', source: 'auto' }],
+    // The exam on 20 Nov gives exam mode from 6 Nov to 21 Nov (plan §7).
+    examPeriods: [{ id: 1, startsOn: '2026-11-06', endsOn: '2026-11-21', source: 'auto' }],
     settings: [
       { key: 'debug', value: true },
       { key: 'fitnessCheckIntervalWeeks', value: 4 },
