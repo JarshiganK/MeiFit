@@ -349,3 +349,10 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Calorie check** (plan §2): on the newest report only, for adults losing fat. It uses the same rule as the fitness check: −175 kcal if the average hasn't dropped over 2 weeks, +175 if losing more than 1% a week after the first 2 weeks. "Apply from today" adds a `manual` target row (never below the floor). The button hides once a change was applied that day, so it can't be stacked.
 - **Status** shows "This week's boss" under the weekly quests (progress so far), and on Mondays a "Last week's boss" banner linking to the report.
 - **XP total:** `src/domain/xp.ts` adds boss XP to the quest breakdown. Status uses it; the quest module stays free of the boss rules.
+
+## 2026-10-26: Phase 2 Must 7 (Shortcuts reminders)
+
+- **Reminders are iOS Personal Automations** (plan §11): a Home Screen web app can't schedule its own notifications offline, and push would need a server, which the plan rules out. So the app's part is Settings → Shortcut help: the six reminders from plan §11 (time and text), the five setup steps, and the Focus alarm shortcut. The "Gym time" row names the training days from your plan.
+- Notifications from Shortcuts open Shortcuts, not the app; the page says so.
+- **Setting up the automations can only be done on the iPhone:** listed as task 2 in `docs/USER-TASKS.md`.
+- **Test time limit, explained:** `e2e/train.spec.ts`'s axe test runs four scans and took about 29 s on WebKit even when passing, so it hit the 30 s limit once under load. It now has 90 s, like the setup test; its assertions are unchanged.

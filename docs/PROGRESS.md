@@ -51,7 +51,7 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 | Reports       | Weekly report                                                         | 2 Must | done                                                                                                                                                                        | `src/domain/weekly.ts`, `src/features/progress/WeeklyReportCard.tsx`                                                                  |
 | System        | Offline installable PWA, persistent storage, backup export and import | 1      | done (persistent storage is also requested in setup, item 3)                                                                                                                | `vite.config.ts`, `src/db/backup.ts`, `src/db/storage.ts`, `src/features/settings/DataCard.tsx`                                       |
 | System        | Settings, debug console toggle, version number and update prompt      | 1      | done: debug, version, update prompt, theme, health note, backup, storage, Privacy, Delete all data, Profile and menu editor (Gemini and Shortcut help come with Phases 2–3) | `src/features/settings/`, `src/app/`                                                                                                  |
-| System        | Reminders through Shortcuts automations                               | 2 Must | todo                                                                                                                                                                        |                                                                                                                                       |
+| System        | Reminders through Shortcuts automations                               | 2 Must | done (the automations themselves are an owner task: `docs/USER-TASKS.md`)                                                                                                   | `src/features/settings/ShortcutHelpScreen.tsx`                                                                                        |
 | System        | Steps import through a Shortcut                                       | 3      | todo                                                                                                                                                                        |                                                                                                                                       |
 
 ## Phase 1 build order
@@ -76,8 +76,8 @@ Build order follows `MASTER_PLAN.md` §13: Phase 0, Phase 1 items 1–11, Phase 
 4. Exam calendar, exam mode and exam workout plan: **done** (`src/domain/exams.ts`, `src/db/exams.ts`)
 5. Rest timer and PR detection: **done** (`src/domain/records.ts`)
 6. Weekly report and boss: **done** (`src/domain/weekly.ts`, `src/domain/xp.ts`)
-7. Shortcuts reminders: **next**
-8. Nice: achievements, progression suggestions, missed-session reschedule, hours per subject, mood check-in
+7. Shortcuts reminders: **done** (`src/features/settings/ShortcutHelpScreen.tsx`)
+8. Nice (**next**): achievements, progression suggestions, missed-session reschedule, hours per subject, mood check-in
 
 ## Open TODOs
 
