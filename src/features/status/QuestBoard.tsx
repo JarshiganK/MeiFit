@@ -132,7 +132,7 @@ export function QuestBoard({ quests, weekly, sleepTargetMin }: QuestBoardProps) 
                 <span className="block text-sm text-muted tabular-nums">
                   {quest.id === 'weighIns'
                     ? d.weighIns(quest.progress.value)
-                    : d.backup(quest.done)}
+                    : d[quest.id](quest.done)}
                 </span>
                 {quest.id === 'weighIns' && !quest.done && (
                   <ProgressBar

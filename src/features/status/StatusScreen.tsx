@@ -13,6 +13,7 @@ import { levelFor } from '../../domain/levels'
 import { indexHistory, questsForDay, totalXp, weeklyQuests } from '../../domain/quests'
 import { ADULT_AGE } from '../../domain/targets'
 import { Card, useToast } from '../../ui'
+import { FitnessBanner } from '../fitness/FitnessBanner'
 import { DrinkButtons } from '../food/DrinkButtons'
 import { FlexDaySwitch } from '../food/FlexDaySwitch'
 import { portionLabel } from '../food/format'
@@ -59,6 +60,7 @@ export function StatusScreen() {
     <>
       <ScreenHeader title={en.status.title} />
       <div className="flex flex-col gap-4 pt-2">
+        <FitnessBanner today={today} />
         <LevelCard progress={levelFor(xp)} totalXp={xp} />
         <QuestBoard
           quests={quests}

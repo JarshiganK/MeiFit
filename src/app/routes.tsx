@@ -4,6 +4,7 @@ import { AppShell } from './AppShell'
 import { ErrorScreen } from './ErrorScreen'
 import {
   DeleteAllScreen,
+  FitnessCheckFlow,
   FoodScreen,
   MenuEditorScreen,
   PlanEditorScreen,
@@ -54,6 +55,15 @@ export const routes: RouteObject[] = [
     element: (
       <Suspense fallback={<ScreenFallback />}>
         <SetupFlow />
+      </Suspense>
+    ),
+    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/fitness-check',
+    element: (
+      <Suspense fallback={<ScreenFallback />}>
+        <FitnessCheckFlow />
       </Suspense>
     ),
     errorElement: <ErrorScreen />,

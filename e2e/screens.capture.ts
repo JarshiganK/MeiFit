@@ -94,9 +94,26 @@ for (const theme of THEMES) {
     })
     await page.goto('/progress')
     await page.getByLabel('Today’s weight (kg)').fill('69.2')
-    await page.getByRole('button', { name: 'Save' }).click()
+    await page
+      .locator('form', { has: page.getByLabel('Today’s weight (kg)') })
+      .getByRole('button', { name: 'Save' })
+      .click()
     await page.getByRole('button', { name: 'Dismiss' }).click()
     await shot(page, `progress-weight-${theme}`, true)
+
+    // A fitness check up to its review.
+    await page.goto('/fitness-check')
+    await shot(page, `fitness-intro-${theme}`)
+    await next(page)
+    await page.getByLabel('Waist (cm)').fill('84')
+    await shot(page, `fitness-body-${theme}`)
+    await next(page)
+    await next(page)
+    await page.getByLabel('Push-ups').fill('22')
+    await page.getByLabel('Plank (seconds)').fill('70')
+    await next(page)
+    await next(page)
+    await shot(page, `fitness-review-${theme}`, true)
 
     // A plan with two training days, then Train.
     await page.goto('/train/plan')

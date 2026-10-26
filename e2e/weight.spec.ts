@@ -40,7 +40,11 @@ test('a weigh-in updates the weekly average and draws the chart, even offline', 
   await page.goto('/progress')
   const card = page.getByRole('region', { name: 'Weight' })
   await card.getByLabel('Today’s weight (kg)').fill('69.0')
-  await card.getByRole('button', { name: 'Save' }).click()
+  // The card also has a Save for waist; use the weight form's.
+  await card
+    .locator('form', { has: page.getByLabel('Today’s weight (kg)') })
+    .getByRole('button', { name: 'Save' })
+    .click()
   await expect(page.getByText('Saved 69 kg')).toBeVisible()
   await expect(card.getByText(/average from 3 weigh-ins/)).toBeVisible()
   await expect(card.locator('canvas')).toBeVisible()

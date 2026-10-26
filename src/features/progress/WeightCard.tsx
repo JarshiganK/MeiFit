@@ -14,6 +14,7 @@ import {
 import { addDays, formatShortDate, weekStart, type LocalDate } from '../../domain/date'
 import { parseNumber } from '../../domain/number'
 import { Button, Card, Sheet, TextField, useToast } from '../../ui'
+import { WaistForm } from './WaistForm'
 
 const WeightChart = lazy(() => import('./WeightChart'))
 
@@ -86,6 +87,7 @@ export function WeightCard() {
             {en.weight.todayValue(kgText(todays.weightKg))}
           </p>
         )}
+        <WaistForm />
 
         <div>
           <h3 className="font-semibold">{en.weight.thisWeek}</h3>

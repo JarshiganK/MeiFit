@@ -18,6 +18,8 @@ import type { ThemePref } from '../../app/theme'
 import { useTheme } from '../../app/useTheme'
 import { APP_VERSION, BUILD_DATE } from '../../app/version'
 import { en } from '../../copy/en'
+import { getSetting, setSetting } from '../../db/settings'
+import { DEFAULT_INTERVAL_WEEKS } from '../../domain/fitness'
 import { Card, SegmentedControl, Switch } from '../../ui'
 import { DataCard } from './DataCard'
 
@@ -55,6 +57,11 @@ function LinkRow({
 export function SettingsScreen() {
   const { pref, setPref } = useTheme()
   const debug = useLiveQuery(isDebugEnabled, [], false)
+  const interval = useLiveQuery(
+    () => getSetting('fitnessCheckIntervalWeeks', DEFAULT_INTERVAL_WEEKS),
+    [],
+    DEFAULT_INTERVAL_WEEKS,
+  )
 
   return (
     <>
@@ -78,6 +85,16 @@ export function SettingsScreen() {
         </Card>
 
         <DataCard />
+
+        <Card title={en.fitness.history.title}>
+          <SegmentedControl
+            label={en.fitness.interval}
+            hint={en.fitness.intervalHint}
+            options={[3, 4, 5, 6].map((n) => ({ value: String(n), label: en.fitness.weeks(n) }))}
+            value={String(interval)}
+            onChange={(value) => void setSetting('fitnessCheckIntervalWeeks', Number(value))}
+          />
+        </Card>
 
         <Card title={en.settings.appearance}>
           <SegmentedControl

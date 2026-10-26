@@ -29,6 +29,12 @@ async function openWeight() {
   return screen.getByRole('region', { name: 'Weight' })
 }
 
+/** The weight form's Save (the card also has one for waist). */
+function weightSave(card: HTMLElement) {
+  const form = within(card).getByLabelText('Today’s weight (kg)').closest('form')!
+  return within(form).getByRole('button', { name: 'Save' })
+}
+
 async function seedWeights(entries: [string, number][]) {
   await db.bodyLogs.bulkAdd(
     entries.map(([date, weightKg]) => ({ date, at: atLocalTime(date, 7, 0), weightKg })),
@@ -42,7 +48,7 @@ describe('weight log', () => {
     const card = await openWeight()
 
     await userEvent.type(within(card).getByLabelText('Today’s weight (kg)'), '69,2')
-    await userEvent.click(within(card).getByRole('button', { name: 'Save' }))
+    await userEvent.click(weightSave(card))
     expect(await screen.findByText('Saved 69.2 kg')).toBeInTheDocument()
     expect(await allWeighIns()).toMatchObject([
       { date: '2026-10-21', weightKg: 69.6 },
@@ -57,7 +63,7 @@ describe('weight log', () => {
     await seedWeights([['2026-10-25', 70]])
     const card = await openWeight()
     await userEvent.type(within(card).getByLabelText('Today’s weight (kg)'), '69.8')
-    await userEvent.click(within(card).getByRole('button', { name: 'Save' }))
+    await userEvent.click(weightSave(card))
     await waitFor(async () => expect((await allWeighIns())[0]?.weightKg).toBe(69.8))
     await userEvent.click(await screen.findByRole('button', { name: 'Undo' }))
     await waitFor(async () => expect((await allWeighIns())[0]?.weightKg).toBe(70))
@@ -66,10 +72,10 @@ describe('weight log', () => {
   it('refuses an empty or impossible weight', async () => {
     await seedProfile()
     const card = await openWeight()
-    await userEvent.click(within(card).getByRole('button', { name: 'Save' }))
+    await userEvent.click(weightSave(card))
     expect(within(card).getByText(en.weight.errors.required)).toBeInTheDocument()
     await userEvent.type(within(card).getByLabelText('Today’s weight (kg)'), '690')
-    await userEvent.click(within(card).getByRole('button', { name: 'Save' }))
+    await userEvent.click(weightSave(card))
     expect(within(card).getByText(en.weight.errors.outOfRange)).toBeInTheDocument()
     expect(await allWeighIns()).toEqual([])
   })
