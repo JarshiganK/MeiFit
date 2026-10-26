@@ -285,3 +285,12 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
   - The weekly-quest test in `src/domain/quests.test.ts` now also expects the due waist quest.
   - `src/db/history.test.ts` counts the 15 XP from its waist row.
 - Exam mode will shrink the check to weight and waist; that lands with exam mode.
+
+## 2026-10-26: Phase 2 Must 2 (streaks and shields)
+
+- **Rule** (plan §7): a day counts when at least 5 daily quests are done. The study quest counts once, however many blocks.
+- **Locked quests:** a quest that's locked (no workout plan yet) simply can't be done; the bar stays at 5, not "5 of the available ones". Alternative: lower the bar while a quest is locked (rejected: it would make streaks easier without a plan).
+- **Shields:** each run of 7 counted days earns a shield, up to 2. A missed day with a shield in hand uses it: the streak survives, but the shielded day doesn't add to it. The run toward the next shield continues after a shielded day and resets when the streak breaks.
+- **Today** only adds to the streak once it counts; it can't break the streak before midnight (plan §5).
+- **Worked out from the logs** every time (`src/domain/streak.ts`), walking from the setup date. Nothing is stored, so correcting a past log can repair or break a past streak, as the plan intends.
+- **Status card:** flame icon with "N-day streak", "Today: x of 5 quests to keep it going", two shield icons with "n of 2 shields", the best streak when it's longer than the current one, and which day a shield last covered.
