@@ -362,3 +362,7 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Card on Status:** "How are you today?" with Energy 1–5 and Mood 1–5, one tap each. Each tap saves straight away; the part not yet picked starts at 3. One `moodLogs` row a day (unique date), and changing a value updates it.
 - **XP** (plan §7): +5 plain XP once a day for a check-in, worked out from the logs. In exam mode the card is hidden and no mood XP is given ("Waist and mood quests are hidden").
 - Mood isn't shown as a trend yet. The data is kept and backed up, ready for a later chart.
+
+## 2026-10-26: Phase 2 Nice 2 (hours per subject)
+
+- Study's "This week" card lists the week's hours per subject, most first, with sessions without a subject grouped as "No subject". It shows only when at least one session has a subject. Timer and hand-entered sessions both count, partial ones included, matching the weekly total above it.
