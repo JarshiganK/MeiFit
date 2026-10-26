@@ -11,6 +11,7 @@ import type { Food } from '../../db/types'
 import { ageOn } from '../../domain/date'
 import { levelFor } from '../../domain/levels'
 import { indexHistory, questsForDay, totalXp, weeklyQuests } from '../../domain/quests'
+import { streakFor } from '../../domain/streak'
 import { ADULT_AGE } from '../../domain/targets'
 import { Card, useToast } from '../../ui'
 import { FitnessBanner } from '../fitness/FitnessBanner'
@@ -20,6 +21,7 @@ import { portionLabel } from '../food/format'
 import { LevelCard } from './LevelCard'
 import { QuestBoard } from './QuestBoard'
 import { SleepCard } from './SleepCard'
+import { StreakCard } from './StreakCard'
 
 /** Status (plan §10): level and XP, today's quests, and the quick logs. */
 export function StatusScreen() {
@@ -62,6 +64,7 @@ export function StatusScreen() {
       <div className="flex flex-col gap-4 pt-2">
         <FitnessBanner today={today} />
         <LevelCard progress={levelFor(xp)} totalXp={xp} />
+        <StreakCard streak={streakFor(history, today)} />
         <QuestBoard
           quests={quests}
           weekly={weekly}

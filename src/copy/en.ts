@@ -87,6 +87,17 @@ export const en = {
     continue: 'Continue',
     quick: 'Quick log',
   },
+  streak: {
+    title: 'Streak',
+    days: (n: number) => (n === 1 ? '1-day streak' : `${n}-day streak`),
+    none: 'No streak yet',
+    best: (n: number) => `Best: ${n} days`,
+    shields: (n: number, max: number) => `${n} of ${max} shields`,
+    shieldsHint: 'Every 7 days in a row earns a shield. A shield covers a missed day by itself.',
+    today: (done: number, needed: number) => `Today: ${done} of ${needed} quests to keep it going`,
+    todayCounts: 'Today counts. Nice work.',
+    saved: (day: string) => `A shield covered ${day}.`,
+  },
   sleep: {
     title: 'Sleep',
     goingToSleep: 'Going to sleep',

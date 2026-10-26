@@ -147,7 +147,8 @@ describe('quest board (plan §7)', () => {
     })
     await openStatus()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(localStorage.getItem('dq.seenLevel')).toBe('1')
+    // Recorded by an effect just after the board renders.
+    await waitFor(() => expect(localStorage.getItem('dq.seenLevel')).toBe('1'))
   })
 })
 

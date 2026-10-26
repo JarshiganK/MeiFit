@@ -33,6 +33,8 @@ test('logging a protein breakfast completes its quest and XP rises', async ({ pa
   const breakfast = board.getByRole('listitem').filter({ hasText: 'Protein at breakfast' })
   await expect(breakfast.getByText('Not yet')).toBeVisible()
   await expect(page.getByText('0 XP in total')).toBeVisible()
+  await expect(page.getByText('No streak yet')).toBeVisible()
+  await expect(page.getByText('Today: 0 of 5 quests to keep it going')).toBeVisible()
 
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Food' }).click()
   await page.getByText('Breakfast', { exact: true }).click()
@@ -43,6 +45,7 @@ test('logging a protein breakfast completes its quest and XP rises', async ({ pa
   await expect(breakfast.getByText('Done')).toBeVisible()
   await expect(page.getByText('10 XP in total')).toBeVisible()
   await expect(page.getByText('115 XP to level 2')).toBeVisible()
+  await expect(page.getByText('Today: 1 of 5 quests to keep it going')).toBeVisible()
 
   // XP is worked out from the logs, so it's the same after a reload.
   await page.reload()
