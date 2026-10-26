@@ -37,6 +37,7 @@ export const DEVICE_ONLY_SETTINGS: readonly SettingKey[] = [
   'geminiKey',
   'setupDraft',
   'fitnessDraft',
+  'restTimer',
 ]
 
 /** Device-only settings an import keeps. A half-finished setup ends with the import. */

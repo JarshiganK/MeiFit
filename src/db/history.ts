@@ -21,52 +21,30 @@ export async function loadQuestHistory(): Promise<QuestHistory | undefined> {
       db.exportLogs,
       db.fitnessChecks,
       db.examPeriods,
+      db.exercises,
     ],
     async () => {
       const profile = await db.profile.get('me')
       if (!profile) return undefined
-      const [
-        targets,
-        days,
-        meals,
-        sleeps,
-        study,
-        sets,
-        plan,
-        body,
-        exports,
-        checks,
-        periods,
-        examPlan,
-      ] = await Promise.all([
-        db.targetHistory.toArray(),
-        db.days.toArray(),
-        db.meals.where('date').aboveOrEqual(profile.setupDate).toArray(),
-        db.sleepLogs.where('wakeDate').aboveOrEqual(profile.setupDate).toArray(),
-        db.studySessions.where('date').aboveOrEqual(profile.setupDate).toArray(),
-        db.workoutSets.where('date').aboveOrEqual(profile.setupDate).toArray(),
-        db.workoutPlans.where('kind').equals('normal').first(),
-        db.bodyLogs.toArray(),
-        db.exportLogs.toArray(),
-        db.fitnessChecks.toArray(),
-        db.examPeriods.toArray(),
-        db.workoutPlans.where('kind').equals('exam').first(),
-      ])
+      const since = profile.setupDate
+      const body = await db.bodyLogs.toArray()
       return {
         profile,
-        targets,
-        days,
-        meals,
-        sleeps,
-        study,
-        sets,
-        plan,
+        targets: await db.targetHistory.toArray(),
+        days: await db.days.toArray(),
+        meals: await db.meals.where('date').aboveOrEqual(since).toArray(),
+        sleeps: await db.sleepLogs.where('wakeDate').aboveOrEqual(since).toArray(),
+        study: await db.studySessions.where('date').aboveOrEqual(since).toArray(),
+        // Every set: personal records compare against days before setup too.
+        sets: await db.workoutSets.toArray(),
+        plan: await db.workoutPlans.where('kind').equals('normal').first(),
         weighIns: body.filter((b) => b.weightKg !== undefined),
-        exports,
+        exports: await db.exportLogs.toArray(),
         waists: body.filter((b) => b.waistCm !== undefined),
-        checks,
-        examPeriods: periods,
-        examPlan,
+        checks: await db.fitnessChecks.toArray(),
+        examPeriods: await db.examPeriods.toArray(),
+        examPlan: await db.workoutPlans.where('kind').equals('exam').first(),
+        exercises: await db.exercises.toArray(),
       }
     },
   )

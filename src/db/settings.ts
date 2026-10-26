@@ -1,3 +1,4 @@
+import type { RestTimer } from '../domain/records'
 import type { FocusTimer } from '../domain/study'
 import { db } from './db'
 
@@ -19,6 +20,10 @@ export interface SettingsMap {
   fitnessLifts: number[]
   /** A fitness check in progress, so it resumes after iOS closes the app. */
   fitnessDraft: unknown
+  /** Rest between sets, in seconds (plan §6). */
+  restSeconds: number
+  /** The rest timer running on this phone, if any (plan §12: it keeps its start time). */
+  restTimer: RestTimer | null
 }
 
 export type SettingKey = keyof SettingsMap

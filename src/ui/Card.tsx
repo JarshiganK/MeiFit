@@ -4,7 +4,7 @@ import { cx } from './cx'
 export interface CardProps {
   title?: string
   /** Small line under the title. */
-  subtitle?: string
+  subtitle?: string | undefined
   /** Adds the HUD corner brackets; use for the one or two cards that matter most on a screen. */
   framed?: boolean
   className?: string
