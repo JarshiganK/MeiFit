@@ -30,6 +30,8 @@ export interface SessionCardProps {
   sets: WorkoutSet[]
   /** Every earlier set of the plan day's exercises, for pre-fill. */
   history: WorkoutSet[]
+  /** The most recent training day this week that went by without a workout. */
+  missed?: { date: LocalDate; planWeekday: number } | undefined
 }
 
 interface Editing {
@@ -42,7 +44,15 @@ interface Editing {
 }
 
 /** Today's planned sets with one-tap ticks, pre-filled from the last session (plan §6, §10). */
-export function SessionCard({ date, plan, day, exercises, sets, history }: SessionCardProps) {
+export function SessionCard({
+  date,
+  plan,
+  day,
+  exercises,
+  sets,
+  history,
+  missed,
+}: SessionCardProps) {
   const toast = useToast()
   const [editing, setEditing] = useState<Editing | null>(null)
   const [picking, setPicking] = useState(false)
@@ -85,6 +95,17 @@ export function SessionCard({ date, plan, day, exercises, sets, history }: Sessi
     return (
       <Card title={en.session.title(weekdayName(ownWeekday))} framed>
         <p className="text-muted">{en.train.restToday}</p>
+        {missed && sets.length === 0 && plan.days.some((d) => d.weekday === missed.planWeekday) && (
+          <div className="mt-3 rounded-md border border-str p-3">
+            <p className="font-semibold">{en.session.missed(weekdayName(weekday(missed.date)))}</p>
+            <Button
+              className="mt-2"
+              onClick={() => void choosePlanDay(date, plan, missed.planWeekday)}
+            >
+              {en.session.doMissed(weekdayName(missed.planWeekday))}
+            </Button>
+          </div>
+        )}
         <Button variant="secondary" className="mt-3" onClick={() => setPicking(true)}>
           {en.session.trainAnyway}
         </Button>

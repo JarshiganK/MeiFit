@@ -193,3 +193,36 @@ describe('progression suggestions (plan §6)', () => {
     expect(await within(squat).findAllByText('12 reps × 42.5 kg')).toHaveLength(3)
   })
 })
+
+describe('missed-session reschedule (plan §6)', () => {
+  it('offers the missed workout on a rest day, and runs it today', async () => {
+    vi.setSystemTime(new Date(2026, 9, 30, 18, 0)) // Friday 30 Oct: rest (Mon and Thu train)
+    renderApp('/train')
+    const card = await screen.findByRole('region', { name: 'Today, Friday' })
+    expect(
+      within(card).getByText('You missed Thursday’s workout. Do it today?'),
+    ).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: 'Do Thursday’s workout' }))
+    expect(
+      await screen.findByRole('region', { name: 'Today: Thursday’s workout' }),
+    ).toBeInTheDocument()
+    expect(await db.days.get('2026-10-30')).toMatchObject({ planWeekday: 4, isPlannedRest: false })
+  })
+
+  it('says nothing when the week’s workouts were done', async () => {
+    for (const date of ['2026-10-26', '2026-10-29']) {
+      await db.workoutSets.add({
+        date,
+        startedAt: atLocalTime(date, 18, 0),
+        exerciseId: 2,
+        setNumber: 1,
+        seconds: 30,
+        done: true,
+      })
+    }
+    vi.setSystemTime(new Date(2026, 9, 30, 18, 0))
+    renderApp('/train')
+    const card = await screen.findByRole('region', { name: 'Today, Friday' })
+    expect(within(card).queryByText(/You missed/)).not.toBeInTheDocument()
+  })
+})

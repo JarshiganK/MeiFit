@@ -5,11 +5,13 @@ import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { useToday } from '../../app/useToday'
 import { en } from '../../copy/en'
-import { getDay } from '../../db/days'
+import { db } from '../../db/db'
+import { daysInWeek, getDay } from '../../db/days'
 import { sessionDate, setsFor, setsOn } from '../../db/sessions'
 import { allExercises, planOn } from '../../db/workout'
-import { weekday } from '../../domain/date'
-import { WEEKDAYS } from '../../domain/workout'
+import { weekDates, weekday } from '../../domain/date'
+import { missedSessions } from '../../domain/session'
+import { WEEKDAYS, dayRule } from '../../domain/workout'
 import { Card, EmptyState, buttonClass, cx } from '../../ui'
 import { weekdayName } from './format'
 import { RestTimerBar } from './RestTimerBar'
@@ -25,10 +27,21 @@ export function TrainScreen() {
     const plan = await planOn(date)
     const day = await getDay(date)
     const planDay = plan?.days.find((d) => d.weekday === (day?.planWeekday ?? weekday(date)))
+    // Training days earlier this week that went by without a set (plan §6: reschedule).
+    const week = weekDates(date).filter((d) => d < date)
+    const plans = new Map(await Promise.all(week.map(async (d) => [d, await planOn(d)] as const)))
+    const weekSets = await db.workoutSets.where('date').anyOf(week).toArray()
+    const missed = missedSessions(
+      date,
+      await daysInWeek(date),
+      new Set(weekSets.filter((s) => s.done).map((s) => s.date)),
+      (d) => ({ date: d, ...dayRule(plans.get(d), d) }),
+    )
     return {
       plan,
       date,
       day,
+      missed: missed[0],
       exercises: await allExercises(),
       sets: await setsOn(date),
       history: await setsFor(planDay?.exercises.map((e) => e.exerciseId) ?? []),
@@ -101,6 +114,7 @@ export function TrainScreen() {
           exercises={exercises}
           sets={data.sets}
           history={data.history}
+          missed={data.missed}
         />
 
         <div>{editLink}</div>

@@ -360,6 +360,8 @@ export const en = {
     untick: 'Untick this set',
     prefillNote: 'Filled in from your last session. Change anything, then tick.',
     trainAnyway: 'Train anyway',
+    missed: (day: string) => `You missed ${day}’s workout. Do it today?`,
+    doMissed: (day: string) => `Do ${day}’s workout`,
     otherWorkout: 'Do a different workout',
     backToPlan: 'Back to today’s plan',
     pickDay: 'Which workout?',
