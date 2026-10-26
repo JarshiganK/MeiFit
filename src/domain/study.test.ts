@@ -3,6 +3,7 @@ import { atLocalTime } from './date'
 import {
   blocksOn,
   finishTimer,
+  minutesBySubject,
   formatCountdown,
   sessionBlocks,
   timerStatus,
@@ -108,5 +109,23 @@ describe('manual entries and the countdown', () => {
     expect(formatCountdown(59_001)).toBe('01:00')
     expect(formatCountdown(0)).toBe('00:00')
     expect(formatCountdown(90 * MIN)).toBe('1:30:00')
+  })
+})
+
+describe('hours per subject (plan §6)', () => {
+  it('adds up minutes per subject, most first, with no-subject sessions together', () => {
+    expect(
+      minutesBySubject([
+        { minutes: 50, subjectId: 1 },
+        { minutes: 30 },
+        { minutes: 100, subjectId: 2 },
+        { minutes: 25, subjectId: 1 },
+        { minutes: 0, subjectId: 3 },
+      ]),
+    ).toEqual([
+      { subjectId: 2, minutes: 100 },
+      { subjectId: 1, minutes: 75 },
+      { subjectId: undefined, minutes: 30 },
+    ])
   })
 })

@@ -112,3 +112,15 @@ export function formatCountdown(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
 }
+
+/** Minutes per subject, most first; sessions without a subject are grouped under `undefined`. */
+export function minutesBySubject(
+  sessions: readonly { minutes: number; subjectId?: number | undefined }[],
+): { subjectId: number | undefined; minutes: number }[] {
+  const totals = new Map<number | undefined, number>()
+  for (const s of sessions) totals.set(s.subjectId, (totals.get(s.subjectId) ?? 0) + s.minutes)
+  return [...totals]
+    .map(([subjectId, minutes]) => ({ subjectId, minutes }))
+    .filter((row) => row.minutes > 0)
+    .sort((a, b) => b.minutes - a.minutes)
+}
