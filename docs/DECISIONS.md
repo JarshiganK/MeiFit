@@ -222,3 +222,16 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **This week** shows all study minutes (partial ones included) against the weekly goal, Monday–Sunday.
 - **Shortcut C:** "Also start a Clock alarm" opens `shortcuts://run-shortcut?name=Focus%20<minutes>`. iOS can't ring an alarm for a closed web app, so this is the only way to get one. The steps to create the shortcut are in `docs/USER-TASKS.md`. It can only be tested on an iPhone.
 - **Test change, explained:** `src/app/App.test.tsx` expected the Study placeholder ("Focus blocks start here"); Study now opens on the focus timer.
+
+## 2026-10-26: Phase 1 item 9 (workout plan builder)
+
+- **One normal plan** (`workoutPlans`, `kind: 'normal'`), created the first time the editor opens. The exam-mode plan (`kind: 'exam'`) uses the same editor in Phase 2.
+- **Training days are weekdays** (approved default): tap Mon–Sun to make a day a training day; the others are planned rest. The editor shows how many days are planned against the workouts-per-week goal from setup, without forcing them to match.
+- **Exercise targets:** sets (1–10), plus a rep range (1–100) for reps and weight × reps, seconds (5–600, steps of 5) for holds, and a target weight (0–500 kg, steps of 0.5) for weight × reps. New exercises start at 3 × 8–12 (@ 20 kg) or 3 × 30 s. The fewest reps can't exceed the most.
+- **Starter exercises:** 15 common ones (bodyweight first, then gym lifts) are loaded the first time a plan is built, only if there are no exercises yet. "New exercise" adds any other with its type (weight × reps, reps or seconds). Names are unique, ignoring case.
+- **Edits save as you go** (one change at a time in a transaction), so nothing is lost if iOS closes the app. Removing an exercise, or turning off a day that has exercises, shows Undo. Exercises can be moved up and down within a day.
+- **Planned rest is saved with the date** (plan §9, approved default): when the app opens, every day since the last saved day, up to today, gets its planned-rest flag from the current plan. Existing days are never changed, except that today's flag follows plan edits made today (today isn't over yet). A flex day set on a date without a row takes its planned-rest flag from the plan too.
+- **Train** shows the week (training and rest days, today marked) and today's planned exercises; with no plan, a designed empty state links to the builder. Logging sets comes in item 10.
+- **Bug found and fixed:** pressing Enter in a number stepper inside a form submitted the form with the old value before the typed one was committed. Enter now only commits the number (new unit test).
+- **Accessibility:** the weekday toggles use their visible text ("Mon") as their name (axe's label-in-name rule).
+- **Backup freshness ignores the automatic planned-rest rows.** Opening the app writes the day's planned-rest flag, which made every backup look out of date the next day (two Settings tests caught it). The "changed since the last backup" fingerprint now leaves out day rows that only carry that automatic flag. They are still in every backup; flex days still count as a change.
