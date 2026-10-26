@@ -8,6 +8,7 @@ import { en } from '../../copy/en'
 import { formatNumber } from '../../copy/format'
 import { db } from '../../db/db'
 import { allWeighIns } from '../../db/body'
+import { allPeriods } from '../../db/exams'
 import { allChecks, finishCheck } from '../../db/fitness'
 import { loadQuestHistory } from '../../db/history'
 import { currentTarget, getProfile } from '../../db/profile'
@@ -15,6 +16,7 @@ import { getSetting, setSetting } from '../../db/settings'
 import { allExercises } from '../../db/workout'
 import { WAIST_LIMITS, roundWeight, weekAverageFor, weeklyAverages } from '../../domain/body'
 import { addDays, ageOn, toLocalDate } from '../../domain/date'
+import { isExamDay } from '../../domain/exams'
 import {
   MAX_MAIN_LIFTS,
   bestE1rm,
@@ -34,6 +36,7 @@ import { formatDuration } from '../status/formatSleep'
 
 type StepId = 'intro' | 'body' | 'strength' | 'endurance' | 'recovery' | 'review'
 const STEPS: StepId[] = ['intro', 'body', 'strength', 'endurance', 'recovery', 'review']
+const EXAM_STEPS: StepId[] = ['intro', 'body', 'review']
 
 interface Draft {
   step: StepId
@@ -108,6 +111,8 @@ async function loadCheckData() {
     lifts: await getSetting('fitnessLifts', []),
     draft: parseDraft(await getSetting('fitnessDraft', null)),
     history: await loadQuestHistory(),
+    // In exam mode only weight and waist are measured (plan §4, §7).
+    examMode: isExamDay(today, await allPeriods()),
   }
 }
 
@@ -132,8 +137,10 @@ function CheckWizard({ data }: { data: Loaded }) {
   const [failed, setFailed] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const first = useRef(true)
-  const index = STEPS.indexOf(draft.step)
-  const step = draft.step
+  const steps = data.examMode ? EXAM_STEPS : STEPS
+  // A draft from a full check resumes at the start if exam mode began since.
+  const step = steps.includes(draft.step) ? draft.step : 'intro'
+  const index = steps.indexOf(step)
   const isMinor = ageOn(profile.birthDate, today) < ADULT_AGE
 
   useEffect(() => {
@@ -284,7 +291,7 @@ function CheckWizard({ data }: { data: Loaded }) {
               type="button"
               aria-label={en.common.back}
               className={iconButtonClass()}
-              onClick={() => go(STEPS[index - 1]!)}
+              onClick={() => go(steps[index - 1]!)}
             >
               <ChevronLeft aria-hidden="true" size={26} />
             </button>
@@ -292,7 +299,7 @@ function CheckWizard({ data }: { data: Loaded }) {
             <span aria-hidden="true" className="size-11 shrink-0" />
           )}
           <div className="min-w-0 flex-1">
-            <Stepper current={index + 1} total={STEPS.length} />
+            <Stepper current={index + 1} total={steps.length} />
           </div>
           <Link to="/" aria-label={copy.close} className={iconButtonClass()}>
             <X aria-hidden="true" size={24} />
@@ -312,6 +319,7 @@ function CheckWizard({ data }: { data: Loaded }) {
             <>
               <p>{copy.intro.body}</p>
               {!lastCheck && <p className="text-muted">{copy.intro.baseline}</p>}
+              {data.examMode && <p className="font-semibold text-int">{copy.intro.examMode}</p>}
               <p className="text-sm text-muted">{copy.intro.tip}</p>
             </>
           )}
@@ -444,7 +452,7 @@ function CheckWizard({ data }: { data: Loaded }) {
             block
             size="lg"
             disabled={saving || blocked}
-            onClick={() => (step === 'review' ? void finish() : go(STEPS[index + 1]!))}
+            onClick={() => (step === 'review' ? void finish() : go(steps[index + 1]!))}
           >
             {step === 'review' ? (saving ? copy.saving : copy.finish) : copy.next}
           </Button>

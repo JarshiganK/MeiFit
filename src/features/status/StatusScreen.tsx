@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { GraduationCap } from 'lucide-react'
 import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { nowMs, useToday } from '../../app/useToday'
@@ -8,7 +9,8 @@ import { allFoods, deleteMeal, drinkLogs, logFood } from '../../db/food'
 import { loadQuestHistory } from '../../db/history'
 import { getProfile } from '../../db/profile'
 import type { Food } from '../../db/types'
-import { ageOn } from '../../domain/date'
+import { ageOn, formatShortDate } from '../../domain/date'
+import { OPEN_END, periodOn } from '../../domain/exams'
 import { levelFor } from '../../domain/levels'
 import { indexHistory, questsForDay, weeklyQuests, xpBreakdown } from '../../domain/quests'
 import { statLevels } from '../../domain/stats'
@@ -51,6 +53,7 @@ export function StatusScreen() {
   const weekly = weeklyQuests(history, today)
   const isMinor = ageOn(history.profile.birthDate, today) < ADULT_AGE
   const { flexPerWeek } = data
+  const examPeriod = periodOn(today, history.examPeriods)
 
   const logDrink = async (drink: Food) => {
     const id = await logFood({ date: today, at: nowMs(), slot: 'drink', food: drink, portion: 1 })
@@ -67,6 +70,14 @@ export function StatusScreen() {
         <FitnessBanner today={today} />
         <LevelCard progress={levelFor(xp)} totalXp={xp} stats={statLevels(breakdown)} />
         <StreakCard streak={streakFor(history, today)} />
+        {examPeriod && (
+          <p className="flex items-center gap-2 rounded-md border border-int px-3 py-2 text-sm font-semibold">
+            <GraduationCap aria-hidden="true" size={18} className="shrink-0 text-int" />
+            {examPeriod.endsOn === OPEN_END
+              ? en.exams.statusNoteOpen
+              : en.exams.statusNote(formatShortDate(examPeriod.endsOn))}
+          </p>
+        )}
         <QuestBoard
           quests={quests}
           weekly={weekly}

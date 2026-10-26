@@ -20,9 +20,10 @@ function questName(quest: QuestResult, sleepTargetMin: number): string {
       return quest.variant === 'restDay' ? q.restDay : q.workout
     case 'sleep':
       return q.sleep(formatDuration(sleepTargetMin))
+    case 'study':
+      return quest.variant === 'exam' ? q.studyExam : q.study
     case 'proteinBreakfast':
     case 'lunchProteins':
-    case 'study':
       return q[quest.id]
   }
 }

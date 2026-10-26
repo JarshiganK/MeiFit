@@ -7,7 +7,7 @@ import { useToday } from '../../app/useToday'
 import { en } from '../../copy/en'
 import { getDay } from '../../db/days'
 import { sessionDate, setsFor, setsOn } from '../../db/sessions'
-import { allExercises, getPlan } from '../../db/workout'
+import { allExercises, planOn } from '../../db/workout'
 import { weekday } from '../../domain/date'
 import { WEEKDAYS } from '../../domain/workout'
 import { Card, EmptyState, buttonClass, cx } from '../../ui'
@@ -18,9 +18,10 @@ import { SessionCard } from './SessionCard'
 export function TrainScreen() {
   const today = useToday()
   const data = useLiveQuery(async () => {
-    const plan = await getPlan('normal')
     // A session that started before midnight is still "today's" workout (plan §5).
     const date = await sessionDate(Date.now())
+    // In exam mode the exam plan is used, if it has training days (plan §7).
+    const plan = await planOn(date)
     const day = await getDay(date)
     const planDay = plan?.days.find((d) => d.weekday === (day?.planWeekday ?? weekday(date)))
     return {
@@ -35,9 +36,10 @@ export function TrainScreen() {
 
   if (!data) return <ScreenFallback />
   const { plan, exercises } = data
+  const examPlanInUse = plan?.kind === 'exam'
   const editLink = (
     <Link
-      to="/train/plan"
+      to={examPlanInUse ? '/train/plan?kind=exam' : '/train/plan'}
       className={buttonClass({ variant: plan && plan.days.length > 0 ? 'secondary' : 'primary' })}
     >
       {plan && plan.days.length > 0 ? en.train.editPlan : en.train.build}
@@ -89,6 +91,7 @@ export function TrainScreen() {
           </ul>
         </Card>
 
+        {examPlanInUse && <p className="text-sm font-semibold text-int">{en.exams.trainNote}</p>}
         <SessionCard
           date={data.date}
           plan={plan}

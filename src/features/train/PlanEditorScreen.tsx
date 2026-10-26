@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { ScreenFallback } from '../../app/ScreenFallback'
 import { ScreenHeader } from '../../app/ScreenHeader'
 import { en } from '../../copy/en'
@@ -25,6 +26,7 @@ import {
   defaultTarget,
   validateTarget,
   type ExerciseType,
+  type PlanKind,
   type PlannedExercise,
 } from '../../domain/workout'
 import {
@@ -45,14 +47,19 @@ type Editing = { weekday: number; index: number; target: PlannedExercise }
 /** Train → Edit plan: training days and the exercises on each (plan §6). */
 export function PlanEditorScreen() {
   // The plan is created (with starter exercises) the first time this opens.
+  const [params, setParams] = useSearchParams()
+  const kind: PlanKind = params.get('kind') === 'exam' ? 'exam' : 'normal'
   useEffect(() => {
-    void ensurePlan()
-  }, [])
-  const data = useLiveQuery(async () => ({
-    plan: await getPlan('normal'),
-    exercises: await allExercises(),
-    goal: (await getProfile())?.workoutsPerWeek ?? DEFAULT_ROUTINE.workoutsPerWeek,
-  }))
+    void ensurePlan(kind)
+  }, [kind])
+  const data = useLiveQuery(
+    async () => ({
+      plan: await getPlan(kind),
+      exercises: await allExercises(),
+      goal: (await getProfile())?.workoutsPerWeek ?? DEFAULT_ROUTINE.workoutsPerWeek,
+    }),
+    [kind],
+  )
   const [adding, setAdding] = useState<number | null>(null)
   const [editing, setEditing] = useState<Editing | null>(null)
   const toast = useToast()
@@ -80,7 +87,18 @@ export function PlanEditorScreen() {
     <>
       <ScreenHeader title={en.plan.title} backTo="/train" />
       <div className="flex flex-col gap-4 pt-2">
-        <p className="text-muted">{en.plan.intro}</p>
+        <SegmentedControl
+          label={en.exams.planKind}
+          options={(['normal', 'exam'] as const).map((value) => ({
+            value,
+            label: en.exams.planKinds[value],
+          }))}
+          value={kind}
+          onChange={(value) =>
+            setParams(value === 'exam' ? { kind: 'exam' } : {}, { replace: true })
+          }
+        />
+        <p className="text-muted">{kind === 'exam' ? en.exams.examPlanIntro : en.plan.intro}</p>
 
         <Card title={en.plan.days} subtitle={en.plan.daysHint(plan.days.length, data.goal)}>
           <ul className="grid grid-cols-7 gap-1">

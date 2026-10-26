@@ -43,6 +43,7 @@ import {
   TextField,
   useToast,
 } from '../../ui'
+import { ExamsCard } from './ExamsCard'
 import { FocusTimerCard } from './FocusTimerCard'
 
 export function StudyScreen() {
@@ -145,6 +146,8 @@ export function StudyScreen() {
           />
           <p className="mt-2 tabular-nums">{copy.weekHours(formatNumber(hours), data.goalHours)}</p>
         </Card>
+
+        <ExamsCard today={today} subjects={data.subjects} />
       </div>
 
       <Sheet
