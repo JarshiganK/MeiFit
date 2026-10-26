@@ -6,10 +6,19 @@
  * Phase 1 (owner answer A): no exam-mode multiplier, streaks or stats yet.
  */
 import { hasAllMainMeals, calibrationStatus } from './calibration'
-import { ageOn, addDays, datesInRange, weekDates, weekStart, type LocalDate } from './date'
+import {
+  ageOn,
+  addDays,
+  datesInRange,
+  daysBetween,
+  weekDates,
+  weekStart,
+  type LocalDate,
+} from './date'
 import { flexBudget } from './flex'
 import { dayTotals, type LoggedMeal } from './food'
 import { mainSleep, meetsSleepTarget } from './sleep'
+import { checkRewards, creditedWaistDates, type CheckResults } from './fitness'
 import { blocksOn, type LoggedSession } from './study'
 import { meetsWorkoutQuest, plannedSetsDone } from './session'
 import { dayRule, planDayFor, type PlanShape } from './workout'
@@ -31,6 +40,7 @@ export const QUEST_XP = {
   sleep: 20,
   weighIns: 20,
   backup: 15,
+  waist: 15,
 } as const
 
 export const WEEKLY_WEIGH_INS = 3
@@ -68,6 +78,10 @@ export interface QuestHistory {
   plan: PlanShape | undefined
   weighIns: readonly { date: LocalDate }[]
   exports: readonly { date: LocalDate }[]
+  /** Waist measurements (plan §7: every 2 weeks). */
+  waists: readonly { date: LocalDate }[]
+  /** Completed fitness checks (plan §4). */
+  checks: readonly ({ date: LocalDate } & CheckResults)[]
 }
 
 function groupBy<T>(items: readonly T[], key: (item: T) => LocalDate): Map<LocalDate, T[]> {
@@ -275,7 +289,7 @@ export function dayXp(quests: readonly QuestResult[]): number {
   return quests.reduce((sum, q) => sum + q.xp, 0)
 }
 
-export type WeeklyQuestId = 'weighIns' | 'backup'
+export type WeeklyQuestId = 'weighIns' | 'backup' | 'waist'
 
 export interface WeeklyResult {
   id: WeeklyQuestId
@@ -305,7 +319,42 @@ export function weeklyQuests(history: QuestHistory, date: LocalDate): WeeklyResu
       maxXp: QUEST_XP.backup,
       progress: { value: Math.min(backups, 1), max: 1 },
     },
+    ...waistQuest(history, date, week),
   ]
+}
+
+/**
+ * The waist quest shows in a week when a measurement is due (13+ days since
+ * the last credited one) or was credited that week. Its XP counts on the day.
+ */
+function waistQuest(history: QuestHistory, date: LocalDate, week: Set<LocalDate>): WeeklyResult[] {
+  const credited = creditedWaistDates(history.waists.map((w) => w.date))
+  const thisWeek = credited.find((d) => week.has(d))
+  const before = credited.filter((d) => d < weekStart(date)).at(-1)
+  const due = before === undefined || daysBetween(before, addDays(weekStart(date), 6)) >= 13
+  if (!thisWeek && !due) return []
+  return [
+    {
+      id: 'waist',
+      done: thisWeek !== undefined,
+      xp: thisWeek ? QUEST_XP.waist : 0,
+      maxXp: QUEST_XP.waist,
+      progress: { value: thisWeek ? 1 : 0, max: 1 },
+    },
+  ]
+}
+
+/** XP from waist measurements and fitness checks, credited on their own dates, up to `today`. */
+export function bonusXp(history: QuestHistory, today: LocalDate): number {
+  const waist = creditedWaistDates(history.waists.map((w) => w.date)).filter(
+    (d) => d >= history.profile.setupDate && d <= today,
+  ).length
+  const checks = [...history.checks].sort((a, b) => a.date.localeCompare(b.date))
+  let fitness = 0
+  checks.forEach((check, i) => {
+    if (check.date <= today) fitness += checkRewards(check, checks[i - 1]).xp
+  })
+  return waist * QUEST_XP.waist + fitness
 }
 
 /**
@@ -320,7 +369,9 @@ export function totalXp(history: QuestHistory, today: LocalDate): number {
   let xp = 0
   for (const date of datesInRange(start, today)) xp += dayXp(questsForDay(index, date))
   for (let monday = weekStart(start); addDays(monday, 6) < today; monday = addDays(monday, 7)) {
-    xp += weeklyQuests(history, monday).reduce((sum, q) => sum + q.xp, 0)
+    xp += weeklyQuests(history, monday)
+      .filter((q) => q.id !== 'waist')
+      .reduce((sum, q) => sum + q.xp, 0)
   }
-  return xp
+  return xp + bonusXp(history, today)
 }

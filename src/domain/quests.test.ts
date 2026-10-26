@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MealItem, MealSlot } from './food'
 import {
+  bonusXp,
   dayXp,
   indexHistory,
   questsForDay,
@@ -36,6 +37,8 @@ function history(patch: Partial<QuestHistory> = {}): QuestHistory {
     plan: undefined,
     weighIns: [],
     exports: [],
+    waists: [],
+    checks: [],
     ...patch,
   }
 }
@@ -262,8 +265,9 @@ describe('XP (plan §7)', () => {
     expect(weeklyQuests(h, '2026-10-22').map((q) => [q.id, q.xp])).toEqual([
       ['weighIns', 20],
       ['backup', 15],
+      ['waist', 0], // never measured, so it's due
     ])
-    expect(weeklyQuests(h, '2026-10-27').map((q) => q.xp)).toEqual([0, 0])
+    expect(weeklyQuests(h, '2026-10-27').map((q) => q.xp)).toEqual([0, 0, 0])
   })
 
   it('adds up every day since setup, crediting weekly quests once the week is over', () => {
@@ -291,5 +295,31 @@ describe('XP (plan §7)', () => {
   it('recalculates when a log is corrected', () => {
     const sleeps = [{ wakeDate: DAY, minutes: 480 }]
     expect(totalXp(history({ sleeps }), DAY)).toBeGreaterThan(totalXp(history(), DAY))
+  })
+})
+
+describe('fitness check and waist XP (plan §4, §7)', () => {
+  it('credits each check on its date: 50 VIT plus 10 STR per improved test', () => {
+    const h = history({
+      checks: [
+        { date: '2026-10-03', pushups: 20, plankSec: 60 },
+        { date: '2026-10-31', pushups: 25, plankSec: 70 }, // two improvements
+      ],
+    })
+    expect(bonusXp(h, '2026-10-30')).toBe(50)
+    expect(bonusXp(h, '2026-10-31')).toBe(50 + 70)
+  })
+
+  it('credits a waist measurement at most every 2 weeks, from setup on', () => {
+    const h = history({
+      waists: [
+        { date: '2026-09-25' }, // before setup
+        { date: '2026-10-03' }, // too soon
+        { date: '2026-10-10' },
+        { date: '2026-10-20' }, // too soon
+      ],
+    })
+    // 09-25 starts the chain (before setup: no XP); 10-10 is 13+ days on; 10-20 is too soon.
+    expect(bonusXp(h, '2026-10-31')).toBe(15)
   })
 })
