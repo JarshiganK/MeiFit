@@ -209,3 +209,16 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Accessibility:** the canvas is hidden from screen readers. The figure has a written summary ("Weekly averages over 5 weeks, from 70.5 kg to 69.2 kg") and a visually hidden table of weekly averages.
 - **Offline:** the chart chunk is precached like every other chunk; e2e reloads Progress offline and checks the chart draws.
 - **Test changes, explained:** `src/app/App.test.tsx` expected Progress's Phase 0 placeholder ("Progress shows up over time"). Progress now opens on the Weight card, so the test checks for that heading. Component tests stub the chart, because jsdom has no canvas; e2e draws the real one.
+
+## 2026-10-26: Phase 1 item 8 (study focus timer)
+
+- **The running timer is one `focusTimer` setting** (start time, planned minutes, optional subject). The countdown is always worked out from the start time (plan §12), refreshed every second and when the app returns to the foreground.
+- **Ending a block:** at or after the end time the session is saved as complete at its planned length, even if the app was closed for hours (approved default). The session and clearing the timer happen in one transaction.
+- **Stop** before the end saves the whole minutes studied as a partial session (hours only, no block). A stop within the first minute saves nothing. **Cancel** discards the timer.
+- **Block length** comes from the profile (default 50 min). The timer's minutes can be changed per session (5–180 in steps of 5). Blocks are counted as ⌊minutes ÷ block length⌋ for completed timers and hand entries, capped at 5 a day (approved default).
+- **Day rule:** a session counts on the day it starts (plan §5), so a block started at 23:40 belongs to that day.
+- **Subjects:** a subject picker with "Add a subject…" (no duplicates, ignoring case). Hours per subject is a Phase 2 Nice item.
+- **"Add study time"** enters a session by hand (date, optional start time, minutes 1–600, optional subject). Without a start time it ends now (today) or starts at midday (an earlier day), never before the day began, so the date can be rebuilt from the timestamp.
+- **This week** shows all study minutes (partial ones included) against the weekly goal, Monday–Sunday.
+- **Shortcut C:** "Also start a Clock alarm" opens `shortcuts://run-shortcut?name=Focus%20<minutes>`. iOS can't ring an alarm for a closed web app, so this is the only way to get one. The steps to create the shortcut are in `docs/USER-TASKS.md`. It can only be tested on an iPhone.
+- **Test change, explained:** `src/app/App.test.tsx` expected the Study placeholder ("Focus blocks start here"); Study now opens on the focus timer.
