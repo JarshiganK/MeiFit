@@ -318,3 +318,13 @@ These fill gaps in `MASTER_PLAN.md`. They're applied when the matching Phase 1 i
 - **Status** shows "Exam mode until …: study XP ×1.5" and labels the quest "Study blocks (×1.5)".
 - **Test change, explained:** the shared fixture's exam period (20 Nov – 5 Dec) didn't match its own exam (20 Nov, which gives 6 – 21 Nov). Opening the app now syncs periods with the calendar, so the inconsistent fixture made two "everything is backed up" tests see changed data. The fixture now has the period its exam implies.
 - **Mood quest** hiding in exam mode lands with the mood check-in (Phase 2 Nice).
+
+## 2026-10-26: Phase 2 Must 5 (rest timer and PR detection)
+
+- **Rest timer:** every tick starts it (default 90 s; 30–300 s in steps of 15, set in the plan editor). It's a `restTimer` setting holding the start time and length, so the countdown is right after iOS pauses the app (plan §12). It's device-only, so it never makes a backup look out of date.
+  - A sticky bar on Train shows "Rest 01:30" with "+15 s" and Skip, then "Rest's over. Next set!" with Dismiss.
+  - iOS can't sound an alert from a paused web app, so the bar is visual only.
+- **Personal records** (plan §7): a day's best set for an exercise is a record when it beats every earlier day for that exercise. Lifts are judged by estimated 1RM, reps-only moves by reps, holds by seconds. An exercise's first day never counts (nothing to beat). Each exercise earns at most one record a day, so several better sets in one session still earn +25 STR once.
+  - Records are worked out from the logs (`src/domain/records.ts`) and counted in STR XP from the setup date. Sets from before setup still count as earlier bests.
+- **On ticking** a record set, the toast says "New personal record! +25 STR". Progress has a "Personal records" card with the best for each exercise and the number of records so far.
+- **Card subtitles** may be left empty (`Card` prop type change, no visual change).
